@@ -1,0 +1,3 @@
+{"type":"run_start","input":"Run KYC on A-991","ts":1786328868635}
+{"type":"step","step_index":1,"calls":[{"call_id":"c1","name":"check_watchlist","args":{"applicant_id":"A-991"},"ok":true,"result":{"applicant_id":"A-991","watchlist_match":false}},{"call_id":"c2","name":"verify_document","args":{"applicant_id":"A-991"},"ok":true,"result":{"applicant_id":"A-991","document_verified":true}}],"ts":1786328868767}
+{"type":"run_finish","output":"KYC complete.","ts":1786328868778}

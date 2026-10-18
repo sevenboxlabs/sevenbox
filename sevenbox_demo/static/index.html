@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sevenbox - Operations Center</title>
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="stylesheet" href="/static/style.css">
+<!-- Applied synchronously, before body paints, so a returning visitor who
+     chose light mode never sees a flash of dark first. Reads the same
+     localStorage key app.js's toggle writes to -- see initThemeToggle(). -->
+<script>
+(function () {
+  try {
+    if (localStorage.getItem("sevenbox-theme") === "light") {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img class="brand-mark" src="/static/sevenbox-logo.png" alt="" aria-hidden="true">
+    <div>
+      <h1>Sevenbox</h1>
+      <p class="tagline">Deterministic runtime for probabilistic agents</p>
+    </div>
+  </div>
+  <div class="op-center-tab">
+    <!-- A hairline (var(--border)) can't be "cut into" by an opaque
+         corner-cutout trick the way a colored fill can -- header, tab,
+         and context-bar all share the exact same background, so there's
+         no color contrast for that trick to reveal. Drawing the curve
+         directly as a stroked path is the only way to get a real,
+         wide, flowing dip instead of a tight border-radius corner. Flat
+         run-in/run-out at each end lines up with the header's own
+         straight border-bottom so the handoff is seamless.
+         Two paths sharing the same curve: op-center-tab-fill is the
+         curve closed off down to the bottom edge, filled --bg-1 (opaque)
+         so it actually occludes header's own border-bottom underneath
+         it (a stroke alone left that straight line visible through the
+         gap, a real bug found on screen, not just in code); op-center-
+         tab-line is the same curve again, unfilled, stroked, for the
+         visible edge itself. -->
+    <svg class="op-center-tab-curve" viewBox="0 0 220 36" aria-hidden="true">
+      <path class="op-center-tab-fill" d="M0,34 C27,34 27,4 58,4 L162,4 C193,4 193,34 220,34 L220,36 L0,36 Z"></path>
+      <path d="M0,34 C27,34 27,4 58,4 L162,4 C193,4 193,34 220,34" fill="none" stroke="currentColor" stroke-width="1"></path>
+    </svg>
+    <span class="op-center-tab-label">Operations Center</span>
+  </div>
+  <div class="controls">
+    <!-- The System Picker: one origin-agnostic entry point for observing a
+         System, whether it's an example (from /api/scenarios) or a local
+         file (from /api/load). The user opens a System; which backend
+         produced it is an implementation detail this panel never surfaces
+         -- see docs/operations_center.md section 3 (Sources). -->
+    <div class="system-picker">
+      <button id="open-system-btn" class="btn btn-primary">Open System...</button>
+      <div id="system-picker-panel" class="system-picker-panel hidden">
+        <div class="system-picker-section">
+          <div class="system-picker-label">Examples</div>
+          <div id="system-picker-examples" class="system-picker-list">
+            <p class="empty-note">Loading...</p>
+          </div>
+        </div>
+        <div class="system-picker-section">
+          <div class="system-picker-label">Your own agent</div>
+          <input id="load-path-input" class="btn load-path-input" type="text" placeholder="Path to your SqliteWarrantStore, e.g. sevenbox_store.db" />
+          <button id="load-btn" class="btn btn-secondary">Open</button>
+        </div>
+      </div>
+    </div>
+    <button id="replay-btn" class="btn btn-secondary" disabled title="Re-derive this System's current view entirely from its captured Warrant store, without invoking any real handler again -- proves the Execution is replayable. Enabled once an example System is open (not for a local file, which was never this process's own live run).">Replay from store</button>
+    <span id="status" class="status"></span>
+    <button id="theme-toggle" class="btn theme-toggle" type="button" title="Switch color theme" aria-label="Switch to light theme">
+      <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <line x1="12" y1="2" x2="12" y2="5"></line>
+        <line x1="12" y1="19" x2="12" y2="22"></line>
+        <line x1="4.2" y1="4.2" x2="6.3" y2="6.3"></line>
+        <line x1="17.7" y1="17.7" x2="19.8" y2="19.8"></line>
+        <line x1="2" y1="12" x2="5" y2="12"></line>
+        <line x1="19" y1="12" x2="22" y2="12"></line>
+        <line x1="4.2" y1="19.8" x2="6.3" y2="17.7"></line>
+        <line x1="17.7" y1="6.3" x2="19.8" y2="4.2"></line>
+      </svg>
+      <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- The Persistent Context Bar (docs/ux_review.md P0-1): the one thing
+     visible on every panel, not just Operations Overview. Absorbs the old
+     current-system-label -- one place for "what am I looking at," not two.
+     Health/Alerts jump back to Operations Overview; Selection jumps to
+     Node Inspector -- all three only when there's somewhere real to jump
+     to, never a dead click. -->
+<div class="context-bar" id="context-bar">
+  <div class="context-item">
+    <span class="context-label">System</span>
+    <span class="context-value" id="ctx-system">None open</span>
+  </div>
+  <div class="context-item">
+    <span class="context-label">Execution</span>
+    <span class="context-value" id="ctx-execution">&mdash;</span>
+  </div>
+  <div class="context-item">
+    <span class="context-label">Health</span>
+    <span class="context-value" id="ctx-health">&mdash;</span>
+  </div>
+  <div class="context-item">
+    <span class="context-label">Alerts</span>
+    <span class="context-value" id="ctx-alerts">&mdash;</span>
+  </div>
+  <div class="context-item">
+    <span class="context-label">Selection</span>
+    <span class="context-value" id="ctx-selection">None</span>
+  </div>
+</div>
+
+<div class="app-body">
+<!-- Populated by app.js's panel registry (see docs/operations_center.md
+     sections 5-6) -- no panel is hardcoded here, adding one is a
+     registerPanel() call in app.js, never a change to this markup. -->
+<nav class="panel-nav" id="panel-nav"></nav>
+
+<main id="panel-container">
+  <section class="panel" id="panel-operations-overview">
+    <h2>Operations Overview</h2>
+    <p class="panel-hint">Every status and number below is decided by warrant_core, not this page.</p>
+    <div id="health-overall" class="health-overall">
+      <p class="empty-note">Open a System to see its health.</p>
+    </div>
+    <h3 class="subsection-heading" id="alerts-heading">Active Alerts</h3>
+    <ul id="active-alerts" class="alerts-list"></ul>
+    <!-- A severity breakdown of DecisionHealth.signals -- always exactly 3
+         signals (compensation_backlog/replay_degraded/frontier_conflicts),
+         each critical/degraded/healthy, so these three counts always sum to
+         3. No fourth "resolved" tile: warrant_core has no per-signal
+         timestamp and no resolution history to report one honestly (see
+         decision_health.py's own docstring on why no trend/rate signal was
+         built) -- three real counts, not four where one is invented. -->
+    <div id="health-signal-summary" class="signal-summary"></div>
+    <details class="overview-metrics-disclosure">
+      <summary>Key Metrics</summary>
+      <div id="metrics-grid" class="metrics-grid"></div>
+    </details>
+  </section>
+
+  <section class="panel" id="panel-decision-browser">
+    <h2>Decision Browser</h2>
+    <p class="panel-hint">Every decision in this Execution, filtered by facts warrant_core already computed -- no search, no new backend query. Select a row to update Node Inspector, Evidence Chain, and the Execution Graph.</p>
+    <div id="browser-filter-bar" class="browser-filter-bar"></div>
+    <div id="browser-results" class="browser-results">
+      <p class="empty-note">Open a System to browse its decisions.</p>
+    </div>
+  </section>
+
+  <section class="panel graph-panel" id="panel-execution-graph">
+    <div class="graph-panel-header">
+      <h2>Execution Graph</h2>
+      <span class="graph-panel-caption">Every decision in this run, and how they connect</span>
+    </div>
+    <p class="empty-note" id="graph-empty-note">Open a System to see its Execution Graph.</p>
+    <div class="svg-scroll">
+      <svg id="graph-svg" width="100%" height="560"></svg>
+    </div>
+    <div id="legend" class="legend"></div>
+  </section>
+
+  <section class="panel node-inspector-panel" id="panel-node-inspector">
+    <h2>Node Inspector</h2>
+    <p class="panel-hint">Click any node (graph or timeline) to inspect it. Every field below is warrant_core's own view of that Warrant -- nothing here is inferred by this page.</p>
+    <div id="node-metadata" class="node-metadata">
+      <p class="empty-note">Open a System to inspect its decisions.</p>
+    </div>
+  </section>
+
+  <section class="panel evidence-chain-panel" id="panel-evidence-chain">
+    <h2>Evidence Chain</h2>
+    <p class="panel-hint">warrant_core.explain()'s own nodes/edges, drawn as received -- not reconstructed from warrants here.</p>
+    <div class="svg-scroll">
+      <svg id="causal-chain-svg" width="100%" height="200"></svg>
+    </div>
+    <h3 class="subsection-heading">Why did this happen?</h3>
+    <div id="explain-output" class="explain-output">
+      <p class="empty-note">Open a System to inspect its decisions.</p>
+    </div>
+  </section>
+
+  <section class="panel timeline-panel" id="panel-timeline">
+    <h2>Timeline</h2>
+    <p class="panel-hint">What happened, in the order it was causally established -- and did a correction arrive before or after an irreversible action already acted on the belief it corrected?</p>
+    <ol id="timeline-list" class="timeline-list">
+      <li class="empty-note">Open a System to see its timeline.</li>
+    </ol>
+  </section>
+
+  <section class="panel frontier-panel" id="panel-frontier">
+    <h2>Frontier</h2>
+    <p class="panel-hint">What the system currently believes -- the fold target.</p>
+    <p class="empty-note">Same set as Decision Browser's "Frontier (live)" preset -- this panel is the moment-in-time view; the Browser is for filtering and cross-referencing.</p>
+    <!-- Conflicts render first, live list second (Decision Browser's own
+         "Needs attention" before "Explore" ordering) -- but conflicts is
+         empty in the common case, so it takes no visual space and this
+         reordering costs nothing when there's nothing to attend to. -->
+    <div id="frontier-conflicts" class="frontier-conflicts"></div>
+    <div id="frontier-live" class="frontier-live">
+      <p class="empty-note">Open a System to see its frontier.</p>
+    </div>
+  </section>
+
+  <section class="panel obligations-panel" id="panel-compensation">
+    <h2>Compensation</h2>
+    <p class="panel-hint">Irreversible actions whose justification was later corrected.</p>
+    <div id="obligations-list">
+      <p class="empty-note">Open a System to see its compensation obligations.</p>
+    </div>
+  </section>
+</main>
+</div>
+
+<footer>
+  <p>Served by <code>sevenbox ops</code> from your local machine. No data leaves this process.</p>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

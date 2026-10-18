@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sevenbox"
+version = "0.1.0"
+description = "Causal audit infrastructure for AI agent decisions -- SDK and 14 framework adapters, built on the warrant-core engine."
+readme = "README.md"
+authors = [
+    { name = "Julian Montana Martinez", email = "julian@sevenbox.dev" },
+]
+license = "Apache-2.0"
+# Upper-bounded by crewai's own deliberate `Requires-Python <3.14`
+# (crewAIInc/crewAI#5109, closed "not planned" -- not a temporary gap).
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "warrant-core>=0.1.0",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    # No License :: classifier here -- the license = "Apache-2.0" SPDX
+    # expression above already declares it, and modern setuptools treats
+    # having both as a hard InvalidConfigError (PEP 639), not a warning.
+    # Found for real trying to install this package, not assumed.
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://sevenbox.dev"
+Repository = "https://github.com/sevenboxlabs/sevenbox"
+
+[tool.setuptools.packages.find]
+include = ["sevenbox_sdk*", "sevenbox_adapters*", "sevenbox_demo*"]
+
+[tool.setuptools.package-data]
+sevenbox_demo = ["static/*", "static/fonts/*"]
+
+[project.scripts]
+sevenbox = "sevenbox_demo.cli:main"
+
+[project.optional-dependencies]
+langgraph = ["langgraph>=1.0"]
+openai-agents = ["openai-agents>=0.19"]
+pydantic-ai = ["pydantic-ai>=2.27"]
+crewai = ["crewai>=1.15"]
+deep-agents = ["deepagents>=0.7"]
+agent-framework = ["agent-framework>=1.13", "agent-framework-orchestrations>=1.0"]
+openhands = ["openhands-sdk>=1.17"]
+llamaindex = ["llama-index-core>=0.14"]
+smolagents = ["smolagents>=1.26"]
+letta = ["letta-client>=1.12"]
+google-adk = ["google-adk>=2.6"]
+strands = ["strands-agents>=1.51"]
+haystack = ["haystack-ai>=3.0"]

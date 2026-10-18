@@ -1,0 +1,1171 @@
+/* ============================================================
+   Sevenbox Design System -- tokens
+   ============================================================
+   The single source of visual truth. No rule below this block
+   should hardcode a color, spacing value, radius, or font size
+   that has an equivalent token here -- if a value is needed that
+   isn't a token yet, add the token, don't inline the value.
+
+   Migrated incrementally (docs/design system work, small commits,
+   verified after each -- shell first, then core components, then
+   panels), same discipline as every architectural change in this
+   project. The legacy names at the bottom (--bg, --panel, --text,
+   etc.) are aliases onto this scale, not a second system -- every
+   rule still using them keeps working exactly as before until it's
+   migrated to the scale directly; nothing breaks mid-migration.
+
+   Hue choices are deliberately Sevenbox's own, not borrowed: the blue/
+   green/amber/red accent set already existed before this pass and
+   stays -- the goal is Vercel/Linear/Stripe's *restraint* (color
+   only where it means something, everything else near-grayscale),
+   not their literal palette. Covering the logo should still read
+   as Sevenbox, not as an unbranded clone.
+
+   Typography (docs/ interface-direction decision): Inter for
+   everything a human wrote (headings, body, labels, buttons),
+   IBM Plex Mono for anything a machine produced that an operator
+   would copy/paste/compare byte-for-byte (warrant ids, hashes,
+   JSON, timestamps, file paths). Both self-hosted below as static
+   files under static/fonts/ -- not a CDN link -- so "no data leaves
+   this process" (see footer) stays literally true for typography,
+   not just for data, and so the typeface actually renders instead
+   of silently falling through to whatever the OS ships.
+   ============================================================ */
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400; font-display: swap; src: url("/static/fonts/inter-400.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 600; font-display: swap; src: url("/static/fonts/inter-600.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 700; font-display: swap; src: url("/static/fonts/inter-700.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("/static/fonts/plexmono-400.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("/static/fonts/plexmono-500.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 600; font-display: swap; src: url("/static/fonts/plexmono-600.woff2") format("woff2"); }
+
+:root {
+  /* --- Background scale: page, then successive lifts for surfaces
+     that need to visually separate from what's behind them. The
+     sidebar/header/context bar deliberately stay at --bg-0, same as
+     the page -- Vercel's own shell reads as one continuous surface
+     divided by hairline borders, not a lighter "panel" fill.
+     Sequence 6: richer near-black page (--bg-0/--bg-1, was #0a0a0c)
+     with panels (--bg-2) now only one deliberate step forward instead
+     of the earlier, bigger jump to #131316 -- "sits slightly forward"
+     rather than reading as a distinct flat card. --bg-well and --bg-3
+     re-tuned alongside so the well still reads darker than a panel and
+     --bg-3 still reads as a further hover lift above it -- the ordering
+     (well < page = shell < panel < hover-lift) is what actually matters,
+     not any single hex in isolation. */
+  --bg-0: #060708;
+  --bg-1: #060708;
+  --bg-2: #0b0d10;
+  --bg-3: #16181c;
+
+  /* --- Borders: hairlines, not boxes. Two weights only. */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  /* --- Text: one hue, three opacities. Hierarchy through weight/
+     opacity, not through introducing more colors. */
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.56);
+  --text-tertiary: rgba(255, 255, 255, 0.36);
+
+  /* --- Accent + status: used sparingly, only when something needs
+     attention. Each carries a "soft" tint for backgrounds so a
+     status never needs a second, louder color to read as urgent, and
+     now a "border" tint (~24% opacity, between the soft fill and the
+     full-value text/icon) so a status badge's border reads as a dim
+     outline around a tonal fill, never a second loud, full-opacity
+     ring competing with the text inside it -- Sequence 6, the same
+     tonal-badge treatment applied consistently to every status/kind
+     indicator in the app, not just health. */
+  /* Exact logo color (#a0d8fc, sampled directly from the asset), not
+     an approximation -- safe as a straight swap in dark theme because
+     every use is light-on-near-black (text, borders, tinted fills),
+     where a paler blue still has plenty of contrast; the concern that
+     would block this (a pale color losing legibility) only applies to
+     light theme's white background, which keeps its own deeper value
+     below, unchanged. */
+  --accent: #a0d8fc;
+  --accent-soft: rgba(160, 216, 252, 0.1);
+  --accent-border-soft: rgba(160, 216, 252, 0.24);
+  --accent-rgb: 160, 216, 252;
+  --success: #7ee787;
+  --success-soft: rgba(126, 231, 135, 0.1);
+  --success-border-soft: rgba(126, 231, 135, 0.24);
+  --warning: #f2cc60;
+  --warning-soft: rgba(242, 204, 96, 0.1);
+  --warning-border-soft: rgba(242, 204, 96, 0.24);
+  --danger: #ff7b72;
+  --danger-soft: rgba(255, 123, 114, 0.1);
+  --danger-border-soft: rgba(255, 123, 114, 0.24);
+
+  /* --- Chrome that isn't quite background, border, or accent: a
+     recessed "well" for code/data blocks (frontier items, JSON
+     viewers), a graph-specific line color for causal-parent edges and
+     the matching legend swatch, an on-accent text color for filled
+     buttons/pills, and a hover wash lighter than either border weight.
+     These existed as unnamed literals scattered through the file --
+     naming them finishes the token migration Design System 1-3/N
+     started; none of the actual values changed. --bg-well darkened
+     alongside the Sequence 6 background re-tune above so a recessed
+     well still reads as pressed *below* the new, lighter --bg-2. */
+  --bg-well: #050608;
+  --graph-line: #3a4552;
+  --on-accent: #04121f;
+  --on-kind: #0b0f14;
+  --hover-wash: rgba(255, 255, 255, 0.03);
+
+  /* --- Button chrome (Sequence 6): the secondary/neutral button
+     (base .btn) pulls back to a transparent fill with only a hairline
+     border, so it stops competing with .btn-primary's filled, glowing
+     treatment right next to it -- see .btn/.btn-primary below. */
+  --btn-border: rgba(255, 255, 255, 0.12);
+  --btn-border-hover: rgba(255, 255, 255, 0.24);
+  --btn-hover-wash: rgba(255, 255, 255, 0.04);
+
+  /* --- source_kind categorical palette. tool/derived were retinted
+     away from --accent/--success (interface-direction decision):
+     .browser-row-selected drew its border in --accent, which was
+     bit-for-bit identical to --kind-tool's fill -- selecting a tool
+     row made the selection border nearly disappear into the badge it
+     surrounded, confirmed by screenshot, not assumed. Same problem,
+     weaker severity, for derived/--success. The category still reads
+     as "blue"/"green" at a glance (nothing about the palette's
+     *meaning* changed) -- only tool/derived are now visibly more
+     muted than the vivid accent/success they used to share a hex
+     with, so a state signal is never pixel-identical to a category
+     signal. axiom/oracle/human were never part of this collision and
+     are unchanged. Hues are untouched by Sequence 6 -- only the
+     *-soft/-border pair below is new, the tonal-badge treatment for
+     .kind-badge, same pattern as --accent-soft/--accent-border-soft. */
+  --kind-axiom: #8b98a5;
+  --kind-axiom-soft: rgba(139, 152, 165, 0.12);
+  --kind-axiom-border: rgba(139, 152, 165, 0.24);
+  --kind-oracle: #b083f0;
+  --kind-oracle-soft: rgba(176, 131, 240, 0.12);
+  --kind-oracle-border: rgba(176, 131, 240, 0.24);
+  --kind-tool: #7c93c9;
+  --kind-tool-soft: rgba(124, 147, 201, 0.12);
+  --kind-tool-border: rgba(124, 147, 201, 0.24);
+  --kind-derived: #8fb87f;
+  --kind-derived-soft: rgba(143, 184, 127, 0.12);
+  --kind-derived-border: rgba(143, 184, 127, 0.24);
+  --kind-human: #f2a65a;
+  --kind-human-soft: rgba(242, 166, 90, 0.12);
+  --kind-human-border: rgba(242, 166, 90, 0.24);
+
+  /* --- Spacing scale. Every margin/padding/gap should resolve to
+     one of these -- whitespace is a feature, not a leftover. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* --- Radius scale. Was square everywhere (0) by deliberate earlier
+     choice; moved to real, generous rounding per direct request to
+     bring the whole app closer to macOS's visual language (big soft
+     corners on every panel/card/dropdown, not just pills). Still one
+     scale, still no literal radius values outside it -- only the
+     numbers changed, every rule below keeps reading from the same
+     token. --radius-full unchanged: pills/badges/dots were already the
+     "most rounded" shape and stay that way. */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+
+  /* --- Typography. Two families, one role each (interface-direction
+     decision) -- Inter for anything a human wrote, IBM Plex Mono for
+     anything machine-shaped an operator would copy/compare (warrant
+     ids, hashes, JSON, timestamps, paths). Both self-hosted above via
+     @font-face, so these aren't fallback-only preferences anymore --
+     the system stack after each is still there as a genuine fallback
+     for the brief window before the font loads, not the expected
+     steady state. */
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Scale bumped +15% across the board (13/14/15/16/18/22/30, was
+     11/12/13/14/16/19/26) -- a flat multiplier kept on top of the
+     original scale as a comment, not baked into unlabeled numbers, so
+     a future adjustment can start from the same ratio instead of
+     re-deriving it from these pixel values. */
+  --text-xs: 13px;
+  --text-sm: 14px;
+  --text-base: 15px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 30px;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* --- Elevation: two shadows, used only for things that actually
+     float above the page (the System Picker dropdown today). */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+  /* --- Depth: every box in the app resolves its shadow from this one
+     token (Sequence 6) -- an inset top hairline (the box catching a
+     light source from above, not a hard edge), a real drop shadow
+     (offset down, blurred, near-black) so a panel/card physically sits
+     forward off the page instead of being a flat fill with a border,
+     and the original ambient white glow (0 0 36px rgba(255,255,255,
+     0.055)) restored as a third layer -- the directional pair alone
+     dropped that soft backlit halo the boxes had before, and it was
+     wanted back, not traded away. All three stack on one token so "no
+     exceptions" stays true without hand-tuning each box. */
+  --glow-box: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 36px rgba(255, 255, 255, 0.055);
+
+  /* --- Motion: fast and quiet. Nothing in this system should
+     animate longer than --duration-base. */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* --- Legacy aliases -- every rule not yet migrated to the scale
+     above keeps resolving to the exact same visual result. Remove
+     an alias only once nothing in this file references it anymore. */
+  --bg: var(--bg-0);
+  --panel: var(--bg-2);
+  --panel-border: var(--border);
+  --text: var(--text-primary);
+  --text-dim: var(--text-secondary);
+  --accent-2: var(--success);
+  --warn: var(--warning);
+
+  --c-axiom: var(--kind-axiom);
+  --c-oracle: var(--kind-oracle);
+  --c-tool: var(--kind-tool);
+  --c-derived: var(--kind-derived);
+  --c-human: var(--kind-human);
+}
+
+/* --- Light theme override -- every rule in this file reads color from
+   a token, never a literal (the discipline stated at the top of this
+   file), so this one block is the entire light theme: nothing below
+   this point needs a parallel [data-theme="light"] rule of its own.
+   Dark stays the default (bare :root above) and the identity Sevenbox
+   ships with -- this is an alternate reading of the same system, not
+   a second design. Hues keep their meaning across both themes (blue
+   is still "accent," green still "healthy," the same source_kind is
+   still the same color) but several needed deeper/more saturated
+   values than their dark-mode counterparts to stay legible as text on
+   a light ground -- a color calibrated to sit on near-black doesn't
+   automatically work calibrated to sit on off-white. Toggled by
+   app.js setting data-theme on <html>, persisted to localStorage;
+   see the toggle button in the header. */
+:root[data-theme="light"] {
+  --bg-0: #f5f6f7;
+  --bg-1: #f5f6f7;
+  --bg-2: #ffffff;
+  --bg-3: #eef2f7;
+
+  --border: rgba(10, 14, 20, 0.10);
+  --border-strong: rgba(10, 14, 20, 0.18);
+
+  --text-primary: rgba(10, 14, 20, 0.88);
+  --text-secondary: rgba(10, 14, 20, 0.60);
+  --text-tertiary: rgba(10, 14, 20, 0.40);
+
+  --accent: #1a6fd6;
+  --accent-soft: rgba(26, 111, 214, 0.08);
+  --accent-border-soft: rgba(26, 111, 214, 0.22);
+  --accent-rgb: 26, 111, 214;
+  --success: #1f8a4c;
+  --success-soft: rgba(31, 138, 76, 0.08);
+  --success-border-soft: rgba(31, 138, 76, 0.20);
+  --warning: #9a6b00;
+  --warning-soft: rgba(154, 107, 0, 0.08);
+  --warning-border-soft: rgba(154, 107, 0, 0.20);
+  --danger: #c53c34;
+  --danger-soft: rgba(197, 60, 52, 0.08);
+  --danger-border-soft: rgba(197, 60, 52, 0.20);
+
+  --bg-well: #eef1f4;
+  --graph-line: #9aa4b2;
+  --on-accent: #ffffff;
+  --on-kind: #ffffff;
+  --hover-wash: rgba(10, 14, 20, 0.035);
+
+  --btn-border: rgba(10, 14, 20, 0.14);
+  --btn-border-hover: rgba(10, 14, 20, 0.26);
+  --btn-hover-wash: rgba(10, 14, 20, 0.045);
+
+  /* Deeper than their dark-mode values for the same legibility reason
+     as accent/success/warning/danger above -- same hue family per
+     kind, still distinct from accent/success so a selection border
+     never goes pixel-identical to a category badge (the collision
+     interface-direction.md already fixed once in dark mode). */
+  --kind-axiom: #5b6472;
+  --kind-axiom-soft: rgba(91, 100, 114, 0.12);
+  --kind-axiom-border: rgba(91, 100, 114, 0.24);
+  --kind-oracle: #8a4fd1;
+  --kind-oracle-soft: rgba(138, 79, 209, 0.12);
+  --kind-oracle-border: rgba(138, 79, 209, 0.24);
+  --kind-tool: #3f6bb0;
+  --kind-tool-soft: rgba(63, 107, 176, 0.12);
+  --kind-tool-border: rgba(63, 107, 176, 0.24);
+  --kind-derived: #4f8f63;
+  --kind-derived-soft: rgba(79, 143, 99, 0.12);
+  --kind-derived-border: rgba(79, 143, 99, 0.24);
+  --kind-human: #b5600a;
+  --kind-human-soft: rgba(181, 96, 10, 0.12);
+  --kind-human-border: rgba(181, 96, 10, 0.24);
+
+  --shadow-sm: 0 1px 2px rgba(20, 20, 30, 0.08);
+  --shadow-md: 0 12px 32px rgba(20, 20, 30, 0.14);
+
+  /* No ambient white glow on a white page -- the dark theme's third
+     layer (a backlight) has nothing to contrast against here, so light
+     mode gets the material pairing only: an inset white top highlight
+     (a bevel catching light, not a glow) plus two real shadows, tight
+     and ambient, both low-key. Same token, same "every box, no
+     exceptions" reach as dark mode. */
+  --glow-box: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 1px 2px rgba(20, 24, 32, 0.04), 0 8px 20px rgba(20, 24, 32, 0.06);
+}
+
+* { box-sizing: border-box; }
+
+/* Themed scrollbar -- both engines, both themes, all from the same tokens
+   the rest of the page already uses (so a light-mode scrollbar isn't stuck
+   with dark-mode's colors and vice versa). Firefox reads scrollbar-color
+   (thumb, then track); Chrome/Edge/Safari read the ::-webkit-scrollbar
+   family. Applied on html so it covers the page's own scrollbar and every
+   internal overflow:auto container (.timeline-list, .browser-results,
+   .json-viewer pre, etc.) without a second ruleset per container. */
+html {
+  scrollbar-color: var(--border-strong) var(--bg-0);
+  scrollbar-width: thin;
+}
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--bg-0); }
+::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: var(--radius-full);
+  border: 3px solid var(--bg-0);
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--text-tertiary); }
+
+/* Reported: with little content (no System open yet, or a short panel),
+   the page was only ever as tall as its own content, so the footer sat
+   stranded partway down a much taller browser window instead of at its
+   actual bottom -- min-height:100vh + flex column + .app-body:flex:1
+   below makes the content area itself fill any remaining viewport
+   height, pushing the footer to the true bottom when content is short,
+   while a genuinely tall Execution/Decision Browser still just grows
+   and scrolls normally, exactly as before. */
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-0);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: 1.5;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* Extra bottom padding (space-5 -> space-7) opens up room between the
+     tagline and the .op-center-tab sitting on the header's own bottom
+     edge -- per direct request, the tab read as too close to
+     "Deterministic runtime for probabilistic agents" above it. */
+  padding: var(--space-5) var(--space-6) var(--space-7);
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  box-shadow: var(--glow-box);
+  position: relative;
+  z-index: 1;
+}
+
+.brand { display: flex; align-items: center; gap: var(--space-3); }
+.brand-mark { width: 34px; height: 34px; flex: 0 0 auto; object-fit: contain; }
+/* A real browser-tab shape rising out of the header/context-bar seam --
+   "Operations Center" moved here from the stacked brand text underneath
+   the logo, per direct request. Went through two earlier shapes (a
+   floating pill, then a border-radius corner) before landing here: a
+   border-radius corner can only ever curve convexly at a rectangle's
+   own edge, it can't produce the wide concave-into-convex flow a real
+   tab has (confirmed against a direct sketch) -- so the curve itself is
+   a stroked SVG path (op-center-tab-curve below), not a CSS corner. The
+   wrapper below is just a positioning box for that SVG plus the label
+   sitting on its plateau. */
+.op-center-tab {
+  /* left:0, not var(--space-6) -- the absolute-positioning containing
+     block's origin is the header's own border-box edge (x:0 of the
+     viewport, header has no left border/margin), so 0 here already
+     lines up with .panel-nav's column start below; var(--space-6)
+     would have matched the logo's own padded-in position instead,
+     confirmed wrong on screen (rendered 32px further right than the
+     column) before landing on this value. */
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 220px;
+  height: 36px;
+  z-index: 2;
+}
+.op-center-tab-curve {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--border);
+  overflow: visible;
+}
+.op-center-tab-fill { fill: var(--bg-1); }
+.op-center-tab-label {
+  position: absolute;
+  /* Centered in the hump's own visual height (the curve spans y:4 to
+     y:34 in a 36-tall viewBox, i.e. a 30px-tall bubble), not stuck to
+     the box's literal top edge, per direct request. */
+  top: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.brand h1 {
+  margin: 0; font-size: var(--text-lg); font-weight: var(--weight-bold);
+  letter-spacing: 0.01em; color: var(--text-primary);
+}
+.tagline { margin: 3px 0 0; color: var(--text-tertiary); font-size: var(--text-xs); }
+
+.controls { display: flex; align-items: center; gap: var(--space-3); }
+
+/* Base .btn is the secondary/neutral tier (Sequence 6: pulled back on
+   purpose) -- transparent fill, hairline border, no shadow, so it never
+   competes with .btn-primary sitting right next to it in the header
+   ("Open System..." vs. "Replay from store"). .btn-primary below layers
+   real material weight on top of this same base. */
+.btn {
+  border: 1px solid var(--btn-border);
+  background: transparent;
+  color: var(--text-primary);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease), box-shadow var(--duration-fast) var(--ease);
+}
+.btn:hover:not(:disabled) { border-color: var(--btn-border-hover); background: var(--btn-hover-wash); }
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Primary keeps its exact hue (--accent -- now the logo's own color in
+   dark theme, see the token block) but gains material weight: a faint
+   top highlight (background-image gradient, not color-mix, for broad
+   compatibility) simulating a light source, an inset top hairline plus
+   a real drop shadow, and a soft colored glow under it in the same hue
+   -- so it reads as a raised, physical button instead of a flat color
+   fill. Hover lifts it 1px and brightens both the fill and the glow
+   slightly, matching the direction other filled controls in the app
+   already take on hover (filter: brightness). Back to pure tokens
+   (was briefly hardcoded to the logo hex directly, before --accent
+   itself moved to match it) -- --on-accent already pairs correctly
+   with each theme's own --accent, dark's pale blue with dark text,
+   light's deep blue with white text, unchanged. */
+.btn-primary {
+  background-color: var(--accent);
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0) 55%);
+  color: var(--on-accent);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: var(--weight-semibold);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 4px 14px rgba(var(--accent-rgb), 0.35);
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent);
+  border-color: rgba(255, 255, 255, 0.08);
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 2px 4px rgba(0, 0, 0, 0.45),
+    0 6px 20px rgba(var(--accent-rgb), 0.45);
+}
+.btn-primary:active:not(:disabled) { transform: scale(0.97) translateY(0); }
+
+.controls-divider { color: var(--border); }
+.load-path-input {
+  cursor: text; width: 220px; font-family: var(--font-mono); font-size: var(--text-sm);
+}
+.load-path-input::placeholder { color: var(--text-tertiary); }
+/* .btn-secondary is intentionally identical to the base .btn -- a
+   deliberate two-tier system (accent-filled primary, neutral secondary),
+   not an unfinished style. */
+
+.status { color: var(--text-tertiary); font-size: var(--text-sm); min-width: 160px; }
+
+/* Theme toggle: icon-only, same .btn base as everything else in the
+   header (transparent, hairline border) so it doesn't introduce a third
+   button treatment. Shows the icon for the mode currently active --
+   moon while dark (the default), sun once switched to light -- rather
+   than the mode a click leads to; app.js only ever flips the CSS
+   attribute + swaps these two SVGs, one .icon-sun/.icon-moon pair, not
+   a state machine. */
+.theme-toggle { padding: var(--space-2); line-height: 0; }
+.theme-toggle .icon-sun { display: none; }
+.theme-toggle .icon-moon { display: block; }
+:root[data-theme="light"] .theme-toggle .icon-sun { display: block; }
+:root[data-theme="light"] .theme-toggle .icon-moon { display: none; }
+
+/* A short cross-fade on the handful of surfaces a toggle click actually
+   touches -- background/text/border color, never layout -- so flipping
+   themes reads as a deliberate transition instead of a hard cut.
+   Skipped for anyone who's said they don't want motion. */
+@media (prefers-reduced-motion: no-preference) {
+  body, header, .context-bar, .panel-nav, .panel, .btn, .badge, .kind-badge,
+  .status-pill, .timeline-event-kind, .browser-row, .timeline-item,
+  .system-picker-panel, .system-picker-item {
+    transition: background-color var(--duration-base) var(--ease), color var(--duration-base) var(--ease), border-color var(--duration-base) var(--ease);
+  }
+}
+
+/* Persistent Context Bar (docs/ux_review.md P0-1) -- the one strip visible
+   on every panel, not just Operations Overview. Shares --bg-1 with the
+   header/sidebar rather than a lifted "panel" fill -- one continuous
+   shell surface, divided by hairlines, per the design system's shell
+   principle. The left border tints by overall health, the same signal
+   .health-banner-* already uses on Operations Overview -- one color
+   language, reused, not reinvented. */
+.context-bar {
+  display: flex; flex-wrap: wrap; gap: var(--space-6);
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-1);
+  border-left: 3px solid transparent;
+  box-shadow: var(--glow-box);
+  position: relative;
+}
+.context-bar-healthy { border-left-color: var(--success); }
+.context-bar-degraded { border-left-color: var(--warning); }
+.context-bar-critical { border-left-color: var(--danger); }
+
+.context-item { display: flex; flex-direction: column; gap: 3px; }
+.context-label {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); font-weight: var(--weight-medium);
+}
+.context-value { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--text-primary); }
+/* Persistent affordance, not hover-only -- a first-time user scanning the
+   Context Bar (the one thing meant to answer "where do I investigate
+   next") has no reason to hover text that looks identical to plain
+   labels. The dotted underline is always visible; hover just confirms
+   with the same accent color the rest of the app already uses for
+   interactive elements. */
+.context-clickable {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--text-tertiary);
+  text-underline-offset: 3px;
+}
+.context-clickable:hover { text-decoration-style: solid; text-decoration-color: var(--accent); }
+
+/* Health/Alerts carry a real status color (.health-healthy/-degraded/
+   -critical, set below) on top of .context-clickable's plain dotted
+   underline -- painted red under "Critical," that combination read as
+   a browser spellcheck squiggle, not a deliberate status indicator
+   (confirmed by screenshot). A tonal badge replaces the underline
+   whenever there's an actual status to show; Selection (no status,
+   just "click to jump") keeps the plain dotted-underline affordance
+   above, unchanged. Alerts gets the exact same badge, in the same
+   status color, immediately to its right -- "one coherent system,"
+   not health styled and alerts left as bare text next to it. */
+/* Shape matches .browser-filter-btn.browser-filter-active ("All (7)") --
+   full pill radius -- but the fill stays tonal/transparent, not solid: a
+   solid fill read as too heavy next to the banner's own tonal red right
+   above it (.health-banner-critical below uses this same border-solid +
+   background-soft pairing) -- same transparency, now in pill form. Full-
+   value border, not the softer *-border-soft token, is the one piece kept
+   solid on purpose. */
+.context-clickable.health-healthy,
+.context-clickable.health-degraded,
+.context-clickable.health-critical {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid;
+  font-weight: var(--weight-semibold);
+}
+.context-clickable.health-healthy { background: var(--success-soft); color: var(--success); border-color: var(--success); }
+.context-clickable.health-degraded { background: var(--warning-soft); color: var(--warning); border-color: var(--warning); }
+.context-clickable.health-critical { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+.context-clickable.health-healthy:hover,
+.context-clickable.health-degraded:hover,
+.context-clickable.health-critical:hover { filter: brightness(1.2); }
+
+/* System Picker -- one origin-agnostic dropdown, docs/operations_center.md
+   sections 2-3. Deliberately plain: no modal overlay, no animation. */
+.system-picker { position: relative; }
+.system-picker-panel {
+  position: absolute; top: calc(100% + var(--space-2)); left: 0; z-index: 10;
+  width: 300px;
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: var(--space-4);
+  box-shadow: var(--shadow-md), var(--glow-box);
+}
+.system-picker-section { margin-bottom: var(--space-4); }
+.system-picker-section:last-child { margin-bottom: 0; }
+.system-picker-label {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); font-weight: var(--weight-medium); margin-bottom: var(--space-2);
+}
+.system-picker-list { display: flex; flex-direction: column; gap: var(--space-1); }
+.system-picker-item {
+  display: block; width: 100%; text-align: left;
+  border: 1px solid var(--border); background: var(--bg-1); color: var(--text-primary);
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); font-size: var(--text-base);
+  cursor: pointer; transition: border-color var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease);
+  box-shadow: var(--glow-box);
+}
+.system-picker-item:hover { border-color: var(--border-strong); background: var(--bg-3); }
+.system-picker-panel .load-path-input { width: 100%; margin-bottom: var(--space-2); }
+
+.hidden { display: none; }
+
+/* Layout: a left-hand, grouped panel list next to the active panel's
+   content -- one panel visible at a time (docs/operations_center.md,
+   section 6). Registering a panel in app.js is the only thing that adds a
+   nav entry; nothing here assumes how many panels or groups exist.
+   align-items: stretch (not the old flex-start) so the nav and the panel
+   column always share one height -- whichever is naturally taller. Panels
+   with short content (Node Inspector, Timeline, Compensation on a small
+   System) used to sit next to a nav pinned to calc(100vh - 90px), leaving a
+   gap of real viewport height between the short card and the footer, on
+   top of the same oversized box-shadow surface repeated over that whole
+   empty span. Stretch removes the viewport-height anchor entirely -- the
+   row is only ever as tall as its own content demands. */
+.app-body { display: flex; align-items: stretch; flex: 1 1 auto; }
+
+.panel-nav {
+  flex: 0 0 216px;
+  padding: var(--space-5) var(--space-3);
+  background: var(--bg-1);
+  border-right: 1px solid var(--border);
+  box-shadow: var(--glow-box);
+  position: relative;
+}
+.panel-nav-group { margin-bottom: var(--space-5); }
+.panel-nav-group-label {
+  padding: 0 var(--space-3) var(--space-2);
+  font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-tertiary); font-weight: var(--weight-medium);
+}
+.panel-nav-btn {
+  display: flex; align-items: center; gap: var(--space-2); width: 100%; text-align: left;
+  border: none; background: none; color: var(--text-secondary);
+  padding: var(--space-2) var(--space-3); font-size: var(--text-base); cursor: pointer;
+  border-radius: var(--radius-sm); border-left: 2px solid transparent;
+  transition: color var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease);
+}
+/* Icon inherits the button's own color at every state (active/hover/
+   inactive) via currentColor -- nothing icon-specific to keep in sync
+   with .panel-nav-active/:hover below. Fixed box so a wider glyph
+   (e.g. the graph icon's three circles) never nudges the label. */
+.panel-nav-icon { flex: 0 0 auto; width: 15px; height: 15px; opacity: 0.85; }
+.panel-nav-btn:hover { color: var(--text-primary); background: var(--bg-2); }
+.panel-nav-btn.panel-nav-active {
+  color: var(--text-primary); border-left-color: var(--accent); font-weight: var(--weight-semibold);
+  background: var(--accent-soft);
+}
+/* The Execution Graph and Decision Browser are the two primary
+   investigation surfaces (Execution Graph: primary visual artifact,
+   Phase 2; Decision Browser: primary investigative capability,
+   ux_review.md P1-4) -- both carry slightly more nav weight even before
+   opened, so the eye is drawn there while scanning the sidebar. Same
+   rule extended to a second panel-id, not a new mechanism. */
+.panel-nav-btn[data-panel-id="execution-graph"]:not(.panel-nav-active),
+.panel-nav-btn[data-panel-id="decision-browser"]:not(.panel-nav-active) {
+  color: var(--text-primary); font-weight: var(--weight-medium);
+}
+
+#panel-container { flex: 1 1 auto; padding: var(--space-6) var(--space-6) 60px; max-width: 1080px; }
+
+.panel {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--glow-box);
+}
+
+.panel h2 { margin: 0 0 var(--space-1); font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.panel-hint { margin: 0 0 var(--space-4); color: var(--text-tertiary); font-size: var(--text-sm); }
+
+/* Execution Graph is the primary artifact of an investigation
+   (docs/ux_review.md P0-3), not a card among cards -- presentation only,
+   the layout algorithm in drawGraphSvg() is untouched. Three things make
+   the eye land here first, none of them a decorative border: it's the
+   only panel on --bg-1 (recedes toward the shell instead of sitting in a
+   card, reads as a canvas), its heading is the largest text on any
+   panel, and the mechanical legend (solid/dashed/dimmed) moved entirely
+   into the legend swatches below the canvas -- nothing sits between the
+   heading and the graph itself competing for the first look. */
+.graph-panel { background: var(--bg-1); padding: var(--space-6); }
+.graph-panel-header {
+  display: flex; align-items: baseline; flex-wrap: wrap;
+  gap: var(--space-3); margin-bottom: var(--space-5);
+}
+.graph-panel-header h2 { font-size: var(--text-2xl); font-weight: var(--weight-bold); margin: 0; }
+.graph-panel-caption { color: var(--text-tertiary); font-size: var(--text-sm); }
+.graph-panel .svg-scroll { padding: 0; background: transparent; border-radius: var(--radius-sm); }
+
+/* Operations Overview (Phase 2, Commit 4): the whole panel answers three
+   questions in five seconds -- healthy?, what needs attention?, where do
+   I go? -- and nothing else competes with that. Key Metrics moved behind
+   a closed <details> disclosure (same pattern jsonBlock() already uses
+   elsewhere) instead of sitting in view by default. */
+/* Elongated + a ~10% corner radius (was --radius-md, i.e. square) and the
+   icon-circle/subtitle/alerts-chip layout below -- requested against a
+   reference banner. The tonal fill (.health-banner-* below) and glow are
+   unchanged, still the same signal this banner always gave, just more
+   physical room and a real icon instead of a status emoji. */
+.health-overall {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-1);
+  box-shadow: var(--glow-box);
+}
+.health-overall-icon {
+  display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: 46px; height: 46px; border-radius: 50%;
+}
+.health-overall-icon-healthy { background: var(--success-soft); color: var(--success); }
+.health-overall-icon-degraded { background: var(--warning-soft); color: var(--warning); }
+.health-overall-icon-critical { background: var(--danger-soft); color: var(--danger); }
+.health-overall-body { display: flex; flex-direction: column; gap: 3px; flex: 1 1 auto; }
+.health-overall-title { font-size: var(--text-2xl); font-weight: var(--weight-bold); line-height: 1.15; }
+.health-overall-subtitle { font-size: var(--text-sm); color: var(--text-secondary); }
+.health-overall-alerts-link {
+  display: inline-flex; align-items: center; gap: var(--space-2); flex: 0 0 auto;
+  border: 1px solid var(--btn-border); background: var(--bg-2); color: var(--text-primary);
+  padding: var(--space-2) var(--space-4); border-radius: 6px;
+  font-family: var(--font-sans); font-size: var(--text-sm); font-weight: var(--weight-medium); cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease);
+}
+.health-overall-alerts-link:hover { border-color: var(--btn-border-hover); background: var(--bg-3); }
+.health-overall-alerts-link svg { flex: 0 0 auto; opacity: 0.7; }
+.health-healthy { color: var(--success); }
+.health-degraded { color: var(--warning); }
+.health-critical { color: var(--danger); }
+
+.health-banner-healthy { border-color: var(--success); background: var(--success-soft); }
+.health-banner-degraded { border-color: var(--warning); background: var(--warning-soft); }
+.health-banner-critical { border-color: var(--danger); background: var(--danger-soft); }
+
+.alerts-list { list-style: none; margin: 0; padding: 0; }
+/* Elongated + ~10% corner radius, same reasoning as .health-overall above.
+   Icon-circle/title-row/tag layout replaces the old dot+two-line text. */
+.alert-item {
+  display: flex; gap: var(--space-3); align-items: flex-start;
+  padding: var(--space-4); border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: var(--text-base); margin-bottom: var(--space-2);
+  background: var(--bg-1);
+  box-shadow: var(--glow-box);
+}
+.alert-item:last-child { margin-bottom: 0; }
+.alert-icon {
+  display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: 34px; height: 34px; border-radius: 50%; margin-top: 1px;
+}
+.alert-icon-critical { background: var(--danger-soft); color: var(--danger); }
+.alert-icon-degraded { background: var(--warning-soft); color: var(--warning); }
+.alert-icon-healthy { background: var(--success-soft); color: var(--success); }
+.alert-body { display: flex; flex-direction: column; gap: 4px; flex: 1 1 auto; min-width: 0; }
+.alert-body-top { display: flex; align-items: center; gap: var(--space-3); justify-content: space-between; }
+.alert-title { font-weight: var(--weight-semibold); color: var(--text-primary); }
+.alert-item .signal-detail { display: block; color: var(--text-tertiary); font-size: var(--text-xs); }
+.alert-tag {
+  display: inline-block; align-self: flex-start; margin-top: 2px;
+  padding: 2px var(--space-2); border-radius: var(--radius-full);
+  font-family: var(--font-sans); font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.02em; border: 1px solid;
+}
+.alert-tag-critical { background: var(--danger-soft); border-color: var(--danger-border-soft); color: var(--danger); }
+.alert-tag-degraded { background: var(--warning-soft); border-color: var(--warning-border-soft); color: var(--warning); }
+.alert-item.alert-degraded { border-color: var(--warning); }
+.alert-item.alert-critical { border-color: var(--danger); }
+/* "Where do I go next?" when the honest answer is "nowhere urgent" --
+   same card shape as a real alert so it reads as part of the same
+   family, tinted healthy instead of a warning color. */
+.alert-item-clear { border-color: var(--success); }
+
+/* Severity breakdown row under Active Alerts (Sequence 6) -- three real
+   counts (critical/degraded/healthy) that always sum to
+   health.signals.length. Deliberately no fourth tile: see the comment on
+   #health-signal-summary in index.html for why a "resolved" count isn't
+   shown -- warrant_core has nothing honest to put there yet. */
+.signal-summary {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--bg-1); box-shadow: var(--glow-box);
+  margin-top: var(--space-4); overflow: hidden;
+}
+.signal-summary-tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: var(--space-4) var(--space-5);
+  border-left: 1px solid var(--border);
+}
+.signal-summary-tile:first-child { border-left: none; }
+.signal-summary-icon { opacity: 0.7; }
+.signal-summary-tile-critical .signal-summary-icon, .signal-summary-tile-critical .signal-summary-value { color: var(--danger); }
+.signal-summary-tile-degraded .signal-summary-icon, .signal-summary-tile-degraded .signal-summary-value { color: var(--warning); }
+.signal-summary-tile-healthy .signal-summary-icon, .signal-summary-tile-healthy .signal-summary-value { color: var(--success); }
+.signal-summary-value { font-size: var(--text-2xl); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
+.signal-summary-label { font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+@media (max-width: 560px) {
+  .signal-summary { grid-template-columns: 1fr; }
+  .signal-summary-tile { border-left: none; border-top: 1px solid var(--border); }
+  .signal-summary-tile:first-child { border-top: none; }
+}
+
+.overview-metrics-disclosure { margin-top: var(--space-5); }
+.overview-metrics-disclosure summary {
+  cursor: pointer; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); font-weight: var(--weight-medium);
+}
+.overview-metrics-disclosure[open] summary { margin-bottom: var(--space-3); }
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-3);
+}
+.metric-tile {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4); background: var(--bg-1);
+  box-shadow: var(--glow-box);
+}
+.metric-tile .metric-value { display: block; font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--text-primary); }
+.metric-tile .metric-label { display: block; color: var(--text-tertiary); font-size: var(--text-xs); margin-top: 2px; }
+
+@media (max-width: 900px) {
+  .app-body { flex-direction: column; }
+  .panel-nav { flex: 0 0 auto; width: 100%; min-height: 0; border-right: none; border-bottom: 1px solid var(--panel-border); }
+}
+
+.svg-scroll { overflow-x: auto; border-radius: var(--radius-sm); background: var(--bg-1); }
+#graph-svg { display: block; min-width: 640px; }
+#causal-chain-svg { display: block; min-width: 320px; }
+
+.node-circle { stroke-width: 2; fill: var(--bg-well); }
+.node-circle.live { opacity: 1; }
+.node-circle.superseded { opacity: 0.35; }
+.node-label { font-size: 12px; fill: var(--text); pointer-events: none; }
+.node-kind-label { font-size: 10px; fill: var(--text-dim); pointer-events: none; }
+.edge-parent { stroke: var(--graph-line); stroke-width: 1.4; }
+/* Animating stroke-dashoffset over the existing stroke-dasharray is the
+   standard SVG technique for a flowing-dash line -- it should read as
+   "this is actively correcting something," not as decoration, so the
+   motion stays slow and the dash pattern stays exactly what it already
+   was (4 3), just in motion. Respects prefers-reduced-motion, since nothing
+   about the edge's meaning depends on the animation actually playing. */
+.edge-supersede {
+  stroke: var(--danger); stroke-width: 1.6; stroke-dasharray: 4 3;
+  animation: supersede-flow 1.4s linear infinite;
+}
+@keyframes supersede-flow {
+  to { stroke-dashoffset: -14; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edge-supersede { animation: none; }
+}
+
+.legend { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-tertiary); }
+.legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: var(--space-1); vertical-align: -1px; }
+.legend-swatch-dim { opacity: 0.35; }
+.legend-line {
+  display: inline-block; width: 16px; height: 0; margin-right: 5px; vertical-align: 3px;
+  border-top: 2px solid var(--graph-line);
+}
+.legend-line-supersede { border-top-color: var(--danger); border-top-style: dashed; }
+
+/* Sequence 6: each row becomes its own hairline-bordered, shadowed box
+   (matching .browser-row's already-boxed treatment) instead of a plain
+   border-bottom separator -- "apply the depth system to every box, no
+   exceptions" named Timeline rows specifically, and a bordered row with
+   its own shadow reads as the same component family as Decision
+   Browser's rows one panel over, which is the more coherent result. */
+.timeline-list { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-2); }
+.timeline-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 14px; background: var(--bg-1);
+  box-shadow: var(--glow-box);
+  transition: border-color var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease);
+}
+.timeline-item:hover { border-color: var(--border-strong); background: var(--bg-3); }
+.timeline-index { color: var(--text-dim); min-width: 20px; }
+/* Structural only -- color comes from the shared .kind-badge family
+   below (a .kind-<source_kind> class is added alongside this one in
+   app.js), the same component now used everywhere a source_kind badge
+   appears (Node Inspector, Decision Browser, Timeline, Frontier). */
+.timeline-kind { flex: 0 0 auto; }
+.timeline-content { color: var(--text-dim); word-break: break-word; font-family: var(--font-mono); }
+.timeline-item.superseded .timeline-content { text-decoration: line-through; opacity: 0.6; }
+
+/* Evidence/Correction/Irreversible/Axiom tags -- tonal, same family as
+   .badge/.kind-badge/.status-pill (Sequence 6): a soft-opacity fill in
+   the category color plus a dim border, not a transparent chip with a
+   full-opacity border doing all the work. */
+.timeline-event-kind {
+  display: inline-block; padding: 1px var(--space-2); border-radius: var(--radius-full);
+  font-family: var(--font-sans); font-size: var(--text-xs); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.02em;
+  border: 1px solid var(--border);
+  background: var(--bg-1);
+  color: var(--text-tertiary);
+}
+.timeline-event-correction { background: var(--danger-soft); border-color: var(--danger-border-soft); color: var(--danger); }
+.timeline-event-irreversible_action { background: var(--warning-soft); border-color: var(--warning-border-soft); color: var(--warning); }
+.timeline-event-axiom { background: var(--accent-soft); border-color: var(--accent-border-soft); color: var(--accent); }
+
+/* Machine-shaped content inline within a human-written sentence
+   (frontier items, compensation obligations) -- only the substring an
+   operator would actually copy/compare switches face, the surrounding
+   prose stays --font-sans. See docs/interface-direction's typography
+   hierarchy: "did a machine produce this exact string," not "is this
+   text small." */
+.mono-inline { font-family: var(--font-mono); }
+
+.frontier-live { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.frontier-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  border: 1px solid var(--panel-border); border-radius: var(--radius-sm);
+  padding: 8px 10px; font-size: 14px; background: var(--bg-well);
+  box-shadow: var(--glow-box);
+}
+.frontier-conflicts .conflict-item {
+  border: 1px solid var(--danger); border-radius: var(--radius-sm);
+  padding: 8px 10px; font-size: 14px; background: var(--danger-soft);
+  margin-bottom: 6px;
+  box-shadow: var(--glow-box);
+}
+
+.obligation-item {
+  border: 1px solid var(--warn); border-radius: var(--radius-sm);
+  padding: 10px 12px; font-size: 14px; background: var(--warning-soft);
+  margin-bottom: 8px;
+  box-shadow: var(--glow-box);
+}
+
+/* Decision Browser as an investigation workspace, not a filter list
+   (Phase 2, Commit 3): "All" stands alone above the two workflow groups
+   ("Needs attention" / "Explore") instead of one flat row of eight equal
+   pills -- picking a filter should feel like choosing what to
+   investigate, not toggling a database facet. */
+.browser-filter-bar { margin-bottom: var(--space-5); display: flex; flex-direction: column; gap: var(--space-3); }
+.browser-filter-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.browser-filter-group { display: flex; flex-direction: column; gap: var(--space-2); }
+.browser-filter-group-label {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); font-weight: var(--weight-medium);
+}
+.browser-filter-btn {
+  border: 1px solid var(--border); border-radius: var(--radius-full);
+  background: var(--bg-2); color: var(--text-primary);
+  padding: var(--space-1) var(--space-3); font-size: var(--text-sm); cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease);
+}
+.browser-filter-btn:hover { border-color: var(--border-strong); background: var(--bg-3); }
+/* .browser-filter-btn.browser-filter-active, not .browser-filter-active
+   alone: found while verifying the retint fix above -- a bare
+   single-class selector here is specificity (0,1,0), lower than
+   :hover's (0,2,0), so hovering the currently-active filter silently
+   reverted it to the unselected grey fill regardless of source order.
+   Matching :hover's specificity and staying below it in source order
+   fixes that. */
+.browser-filter-btn.browser-filter-active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: var(--weight-semibold); }
+
+/* Persistent context line (Phase 2, Commit 3): restates the active
+   question above the results so scrolling a filtered list never loses
+   track of what's being investigated. Absent for "All". */
+.browser-context {
+  margin: 0 0 var(--space-3); padding: var(--space-2) var(--space-3);
+  border-left: 2px solid var(--accent); color: var(--text-secondary); font-size: var(--text-sm);
+}
+.browser-context strong { color: var(--text-primary); }
+
+.browser-results { display: flex; flex-direction: column; gap: var(--space-2); max-height: 440px; overflow-y: auto; }
+.browser-row {
+  display: flex; align-items: center; gap: var(--space-3);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3); font-size: var(--text-sm); background: var(--bg-1);
+  cursor: pointer;
+  box-shadow: var(--glow-box);
+  transition: border-color var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease);
+}
+.browser-row:hover { border-color: var(--border-strong); background: var(--bg-3); }
+.browser-row-selected { border-color: var(--accent); background: var(--accent-soft); }
+/* Structural only, same as .timeline-kind above -- color comes from the
+   .kind-badge family. */
+.browser-row-kind { flex: 0 0 auto; }
+.browser-row-content { flex: 1 1 auto; color: var(--text-secondary); word-break: break-word; font-family: var(--font-mono); }
+.browser-row-flags { flex: 0 0 auto; font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.03em; }
+
+/* Selection Context entry points (docs/operations_center.md section 13):
+   these rows navigate to Node Inspector on click, same affordance as a
+   graph node's own cursor. */
+.obligation-clickable, .alert-clickable { cursor: pointer; }
+.obligation-clickable:hover { border-color: var(--accent); }
+/* Alert cards carry real severity meaning in their border color
+   (.alert-item.alert-critical/-degraded, set above) -- unlike obligation
+   rows, which are always the same warning amber regardless of state, so
+   there's no meaning for a shared blue hover border to clobber. Hover
+   here lifts the background instead (same var(--bg-3) row-hover already
+   used by .timeline-item/.browser-row), so a degraded card never shows a
+   blue border next to its own amber "DEGRADED" tag just because the
+   cursor is sitting on it. */
+.alert-clickable:hover { background: var(--bg-3); }
+
+.empty-note { color: var(--text-dim); font-size: 14px; font-style: italic; }
+
+.subsection-heading {
+  margin: 16px 0 6px; padding-top: 12px; border-top: 1px solid var(--panel-border);
+  font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim);
+}
+
+.node-metadata { font-size: 14px; max-height: 460px; overflow-y: auto; }
+.metadata-list {
+  display: grid; grid-template-columns: 120px 1fr;
+  gap: 4px 10px; margin: 0 0 10px;
+}
+.metadata-list dt { color: var(--text-dim); }
+.metadata-list dd { margin: 0; word-break: break-word; }
+.metadata-list .mono { font-family: var(--font-mono); font-size: 13px; }
+
+/* Node Inspector as an object page, not a metadata table (Phase 2,
+   Commit 2; grouping itself dates to docs/ux_review.md P0-2): Identity,
+   Current status, Replay, Compensation, Effects, Relationships, Evidence,
+   Metadata -- each section answers one question an operator actually
+   asks, in the order they'd ask it. Same data as before, only grouped
+   and ordered like a narrative. */
+.inspector-id {
+  font-size: var(--text-xs); color: var(--text-tertiary); word-break: break-all;
+  margin-bottom: var(--space-2); font-family: var(--font-mono);
+}
+.inspector-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.badge {
+  display: inline-block; padding: 3px var(--space-3); border-radius: var(--radius-full);
+  font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.02em;
+  font-size: var(--text-xs); font-weight: var(--weight-semibold); border: 1px solid var(--border);
+  background: var(--bg-1); color: var(--text-primary);
+}
+.inspector-line { margin: 0 0 4px; color: var(--text-secondary); }
+
+/* .kind-badge (Sequence 6): the one component for a source_kind badge,
+   used everywhere source_kind renders as a badge (Node Inspector's
+   Identity badge, Decision Browser rows, Timeline rows, Frontier's live
+   list) -- previously each site painted its own inline
+   background:KIND_COLORS[...] as a solid, full-opacity fill with dark
+   text on top (flat-filled). Tonal now: a soft-opacity fill in the
+   category color, the color itself moved to the text/icon, and a dim
+   border between the two -- same pattern as .status-pill and
+   .timeline-event-kind. Deliberately does *not* touch KIND_COLORS or
+   --kind-* hues themselves -- those still drive the Execution Graph's
+   node strokes and its legend swatches, out of scope here and untouched
+   (interface-direction's retint already settled those). A source_kind
+   this app doesn't have a dedicated color for (sensor/clock/random/
+   federated -- see CLAUDE.md section 3.1) simply gets no .kind-<x>
+   modifier and falls back to this neutral base, not a hardcoded gray. */
+.kind-badge {
+  display: inline-block; padding: 2px var(--space-2); border-radius: var(--radius-full);
+  font-family: var(--font-sans); font-size: var(--text-xs); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.4;
+  border: 1px solid var(--border); background: var(--bg-1); color: var(--text-tertiary);
+}
+.kind-axiom { background: var(--kind-axiom-soft); color: var(--kind-axiom); border-color: var(--kind-axiom-border); }
+.kind-oracle { background: var(--kind-oracle-soft); color: var(--kind-oracle); border-color: var(--kind-oracle-border); }
+.kind-tool { background: var(--kind-tool-soft); color: var(--kind-tool); border-color: var(--kind-tool-border); }
+.kind-derived { background: var(--kind-derived-soft); color: var(--kind-derived); border-color: var(--kind-derived-border); }
+.kind-human { background: var(--kind-human-soft); color: var(--kind-human); border-color: var(--kind-human-border); }
+
+/* Current status (Phase 2, Commit 2): the operator's second question
+   after "what is this," answered with more visual weight than the
+   Identity badges -- a status pill, not just another badge in the same
+   row, the same way Stripe/GitHub's object pages give status its own
+   prominence separate from an object's type tags. */
+.inspector-status { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+/* Tonal (Sequence 6): border dropped from the status's full-value color
+   to its ~24%-opacity soft-border token, matching every other badge/pill
+   in the app now (.kind-badge, .timeline-event-kind) -- the fill+text
+   already carried the color; a full-opacity border on top of that read
+   as one part of the badge louder than the rest. */
+.status-pill {
+  display: inline-block; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full);
+  font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.02em;
+  font-size: var(--text-xs); font-weight: var(--weight-semibold); border: 1px solid;
+}
+.status-pill-live { background: var(--success-soft); border-color: var(--success-border-soft); color: var(--success); }
+.status-pill-superseded { background: var(--bg-1); border-color: var(--border-strong); color: var(--text-tertiary); }
+.status-pill-pending { background: var(--warning-soft); border-color: var(--warning-border-soft); color: var(--warning); }
+/* Severity variants (Sequence 6) -- the Operations Overview banner's
+   active-alerts chip and each alert card's own badge, same tonal family. */
+.status-pill-critical { background: var(--danger-soft); border-color: var(--danger-border-soft); color: var(--danger); }
+.status-pill-degraded { background: var(--warning-soft); border-color: var(--warning-border-soft); color: var(--warning); }
+/* Same pill, recalibrated for Timeline's dense single-line rows (11px to
+   sit next to the row's existing 10px badges, pushed to the row's own
+   trailing edge -- the same right-aligned-flag convention Decision
+   Browser's .browser-row-flags already uses for "superseded"). */
+.timeline-pending-pill { font-size: var(--text-xs); padding: 1px var(--space-2); margin-left: auto; flex: 0 0 auto; }
+
+.json-viewer { margin-top: 6px; }
+.json-viewer summary {
+  cursor: pointer; color: var(--accent); font-size: 13px;
+  text-transform: uppercase; letter-spacing: 0.03em;
+}
+.json-viewer pre {
+  margin: 6px 0 0; padding: 8px 10px; background: var(--bg-well); border-radius: var(--radius-sm);
+  box-shadow: var(--glow-box);
+  font-family: var(--font-mono); font-size: 13px;
+  white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto;
+}
+
+.explain-output { font-size: 14px; max-height: 320px; overflow-y: auto; }
+.explain-line {
+  padding: 3px 0;
+  font-family: var(--font-mono);
+  white-space: pre;
+  color: var(--text);
+}
+.node-circle { cursor: pointer; }
+.node-circle:hover { stroke-width: 3; }
+/* Selection needs its own color, not just a thicker stroke in the
+   node's own categorical color -- a selected tool node (stroke already
+   --kind-tool-ish blue) was nearly as hard to read as "selected" as the
+   Decision Browser row was before the tool/accent retint. --accent
+   overrides the per-kind stroke attribute (SVG presentation attributes
+   lose to any real CSS rule, no !important needed). Matches :hover's
+   specificity and sits after it in source order so a highlighted node
+   stays fully visible even while the cursor is still over it right
+   after a click -- the same class of bug already found and fixed for
+   .browser-filter-active. */
+.node-circle.node-highlight { stroke: var(--accent); stroke-width: 4; }
+
+footer { padding: 18px 28px 40px; color: var(--text-dim); font-size: 13px; }
+footer code { background: var(--panel); padding: 1px 6px; border-radius: var(--radius-sm); }
+
+kbd {
+  background: var(--panel); border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm); padding: 1px 5px; font-size: 13px;
+}

@@ -1,0 +1,15 @@
+{
+  "name": "sevenbox-mastra-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeScript/Node-side log emitter for Sevenbox's Mastra integration. See sevenbox_adapters/mastra_adapter.py for the Python-side importer that reads its output.",
+  "main": "sevenboxStepLogger.mjs",
+  "scripts": {
+    "example:kyc": "node examples/kyc_scenario.mjs"
+  },
+  "dependencies": {
+    "@mastra/core": "^1.57.0",
+    "zod": "^4.0.0"
+  }
+}
