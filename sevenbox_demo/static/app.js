@@ -949,9 +949,17 @@ function drawGraphSvg(svg, nodes, edges, { onNodeClick, highlightId } = {}) {
     const p = positions[n.id];
     const g = el("g", {});
     const classes = ["node-circle", n.isLive ? "live" : "superseded"];
-    if (n.id === highlightId) classes.push("node-highlight");
+    const isHighlighted = n.id === highlightId;
+    if (isHighlighted) classes.push("node-highlight");
+    // A highlighted "tool" node's ring color (--accent) sits close in hue
+    // to --kind-tool's own stroke color -- a thicker same-hue ring reads
+    // as barely-there next to a tool node specifically, even though it's
+    // obvious on every other kind (confirmed: a real operator missed it).
+    // Bumping the radius too makes selection visible by *size*, which
+    // doesn't depend on hue contrast at all, on top of the existing
+    // stroke-width/color change in .node-highlight (style.css).
     const circle = el("circle", {
-      cx: p.x, cy: p.y, r: radius,
+      cx: p.x, cy: p.y, r: isHighlighted ? radius + 5 : radius,
       class: classes.join(" "),
       stroke: KIND_COLORS[n.sourceKind] || "#888",
     });

@@ -13,6 +13,11 @@ a separate, compiled engine package — not on PyPI, distributed as a
 GitHub Release of this repo (see [Install](#install) and
 [License](#license)).
 
+![Execution Graph: the Operations Center view of one run's decisions, shown as a causal graph connecting an axiom, an oracle inference, tool calls, derived claims and a human-reviewed step.](docs/images/execution-graph.png)
+
+The local Operations Center UI (`sevenbox ops`) ships with this repo —
+every run your agent makes, with the causal graph above.
+
 ## Install
 
 Neither package is on PyPI yet. Both come from this repo.

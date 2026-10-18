@@ -90,12 +90,15 @@
   --success: #7ee787;
   --success-soft: rgba(126, 231, 135, 0.1);
   --success-border-soft: rgba(126, 231, 135, 0.24);
+  --success-fill: rgba(126, 231, 135, 0.3);
   --warning: #f2cc60;
   --warning-soft: rgba(242, 204, 96, 0.1);
   --warning-border-soft: rgba(242, 204, 96, 0.24);
+  --warning-fill: rgba(242, 204, 96, 0.3);
   --danger: #ff7b72;
   --danger-soft: rgba(255, 123, 114, 0.1);
   --danger-border-soft: rgba(255, 123, 114, 0.24);
+  --danger-fill: rgba(255, 123, 114, 0.3);
 
   /* --- Chrome that isn't quite background, border, or accent: a
      recessed "well" for code/data blocks (frontier items, JSON
@@ -112,6 +115,23 @@
   --on-accent: #04121f;
   --on-kind: #0b0f14;
   --hover-wash: rgba(255, 255, 255, 0.03);
+
+  /* Severity (health/alerts) goes solid, not tonal -- a deliberate
+     reversal of the tonal-fill decision above for --kind-*/--accent:
+     requested directly so a critical card reads as a single saturated
+     block, the same weight as a real incident banner, instead of a
+     dim-tinted card with a colored border carrying all the signal.
+     --on-severity is --on-kind's identical value, named separately
+     because it pairs with a different palette (severity, not
+     source_kind) -- same precedent as --on-accent/--on-kind already
+     being two identically-valued tokens for two different categories.
+     --severity-chip-overlay is for a badge/pill/icon nested *inside* an
+     already-solid severity card (status pill, tag, icon circle): a flat
+     dark wash darkens whichever severity color sits behind it, so
+     --on-severity text stays readable without needing a second color
+     per severity per theme. */
+  --on-severity: #0b0f14;
+  --severity-chip-overlay: rgba(0, 0, 0, 0.18);
 
   /* --- Button chrome (Sequence 6): the secondary/neutral button
      (base .btn) pulls back to a transparent fill with only a hairline
@@ -277,17 +297,21 @@
   --success: #1f8a4c;
   --success-soft: rgba(31, 138, 76, 0.08);
   --success-border-soft: rgba(31, 138, 76, 0.20);
+  --success-fill: rgba(31, 138, 76, 0.3);
   --warning: #9a6b00;
   --warning-soft: rgba(154, 107, 0, 0.08);
   --warning-border-soft: rgba(154, 107, 0, 0.20);
+  --warning-fill: rgba(154, 107, 0, 0.3);
   --danger: #c53c34;
   --danger-soft: rgba(197, 60, 52, 0.08);
   --danger-border-soft: rgba(197, 60, 52, 0.20);
+  --danger-fill: rgba(197, 60, 52, 0.3);
 
   --bg-well: #eef1f4;
   --graph-line: #9aa4b2;
   --on-accent: #ffffff;
   --on-kind: #ffffff;
+  --on-severity: #ffffff;
   --hover-wash: rgba(10, 14, 20, 0.035);
 
   --btn-border: rgba(10, 14, 20, 0.14);
@@ -587,12 +611,12 @@ header {
    status color, immediately to its right -- "one coherent system,"
    not health styled and alerts left as bare text next to it. */
 /* Shape matches .browser-filter-btn.browser-filter-active ("All (7)") --
-   full pill radius -- but the fill stays tonal/transparent, not solid: a
-   solid fill read as too heavy next to the banner's own tonal red right
-   above it (.health-banner-critical below uses this same border-solid +
-   background-soft pairing) -- same transparency, now in pill form. Full-
-   value border, not the softer *-border-soft token, is the one piece kept
-   solid on purpose. */
+   full pill radius. Solid fill (reversed from the original tonal/
+   transparent call below, by direct request): the banner right above it
+   went solid too (.health-banner-critical below), so a tonal pill next
+   to a solid banner would now read as the quieter, secondary signal --
+   backwards, since the context bar is the one piece of this that's
+   visible from every panel, not just Operations Overview. */
 .context-clickable.health-healthy,
 .context-clickable.health-degraded,
 .context-clickable.health-critical {
@@ -605,9 +629,9 @@ header {
   border: 1px solid;
   font-weight: var(--weight-semibold);
 }
-.context-clickable.health-healthy { background: var(--success-soft); color: var(--success); border-color: var(--success); }
-.context-clickable.health-degraded { background: var(--warning-soft); color: var(--warning); border-color: var(--warning); }
-.context-clickable.health-critical { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+.context-clickable.health-healthy { background: var(--success-fill); color: var(--on-severity); border-color: var(--success); }
+.context-clickable.health-degraded { background: var(--warning-fill); color: var(--on-severity); border-color: var(--warning); }
+.context-clickable.health-critical { background: var(--danger-fill); color: var(--on-severity); border-color: var(--danger); }
 .context-clickable.health-healthy:hover,
 .context-clickable.health-degraded:hover,
 .context-clickable.health-critical:hover { filter: brightness(1.2); }
@@ -750,9 +774,15 @@ header {
   display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
   width: 46px; height: 46px; border-radius: 50%;
 }
-.health-overall-icon-healthy { background: var(--success-soft); color: var(--success); }
-.health-overall-icon-degraded { background: var(--warning-soft); color: var(--warning); }
-.health-overall-icon-critical { background: var(--danger-soft); color: var(--danger); }
+/* Solid, not tonal (reversed by direct request -- see the
+   .context-clickable.health-* comment above for why): the icon circle
+   uses --severity-chip-overlay rather than a second severity color,
+   since it now sits on top of an already-solid-colored banner
+   (.health-banner-* below) instead of the neutral card the tonal
+   version used to sit on. */
+.health-overall-icon-healthy,
+.health-overall-icon-degraded,
+.health-overall-icon-critical { background: var(--severity-chip-overlay); color: var(--on-severity); }
 .health-overall-body { display: flex; flex-direction: column; gap: 3px; flex: 1 1 auto; }
 .health-overall-title { font-size: var(--text-2xl); font-weight: var(--weight-bold); line-height: 1.15; }
 .health-overall-subtitle { font-size: var(--text-sm); color: var(--text-secondary); }
@@ -769,9 +799,24 @@ header {
 .health-degraded { color: var(--warning); }
 .health-critical { color: var(--danger); }
 
-.health-banner-healthy { border-color: var(--success); background: var(--success-soft); }
-.health-banner-degraded { border-color: var(--warning); background: var(--warning-soft); }
-.health-banner-critical { border-color: var(--danger); background: var(--danger-soft); }
+/* Solid card fill (reversed by direct request, same reasoning as the
+   context pill above): a single saturated block instead of a dim tint
+   with the color carried only by the border. --health-overall-title/
+   -subtitle and the .health-healthy/-degraded/-critical label text all
+   need to flip to --on-severity once they're sitting on top of that
+   solid fill instead of --bg-1 -- see the override block right below. */
+.health-banner-healthy { border-color: var(--success); background: var(--success-fill); }
+.health-banner-degraded { border-color: var(--warning); background: var(--warning-fill); }
+.health-banner-critical { border-color: var(--danger); background: var(--danger-fill); }
+.health-banner-healthy .health-overall-title,
+.health-banner-healthy .health-overall-subtitle,
+.health-banner-healthy .health-healthy,
+.health-banner-degraded .health-overall-title,
+.health-banner-degraded .health-overall-subtitle,
+.health-banner-degraded .health-degraded,
+.health-banner-critical .health-overall-title,
+.health-banner-critical .health-overall-subtitle,
+.health-banner-critical .health-critical { color: var(--on-severity); }
 
 .alerts-list { list-style: none; margin: 0; padding: 0; }
 /* Elongated + ~10% corner radius, same reasoning as .health-overall above.
@@ -789,8 +834,13 @@ header {
   display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
   width: 34px; height: 34px; border-radius: 50%; margin-top: 1px;
 }
-.alert-icon-critical { background: var(--danger-soft); color: var(--danger); }
-.alert-icon-degraded { background: var(--warning-soft); color: var(--warning); }
+/* Critical/degraded icon circles sit on a now-solid alert-item
+   background (below) -- overlay, not a second severity color, same
+   reasoning as .health-overall-icon-* above. alert-icon-healthy is
+   unchanged: it only ever appears on .alert-item-clear, which stays
+   neutral/bordered (see that rule's own comment). */
+.alert-icon-critical,
+.alert-icon-degraded { background: var(--severity-chip-overlay); color: var(--on-severity); }
 .alert-icon-healthy { background: var(--success-soft); color: var(--success); }
 .alert-body { display: flex; flex-direction: column; gap: 4px; flex: 1 1 auto; min-width: 0; }
 .alert-body-top { display: flex; align-items: center; gap: var(--space-3); justify-content: space-between; }
@@ -802,13 +852,29 @@ header {
   font-family: var(--font-sans); font-size: 11px; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.02em; border: 1px solid;
 }
-.alert-tag-critical { background: var(--danger-soft); border-color: var(--danger-border-soft); color: var(--danger); }
-.alert-tag-degraded { background: var(--warning-soft); border-color: var(--warning-border-soft); color: var(--warning); }
-.alert-item.alert-degraded { border-color: var(--warning); }
-.alert-item.alert-critical { border-color: var(--danger); }
+.alert-tag-critical { background: var(--danger-fill); border-color: var(--danger); color: var(--on-severity); }
+.alert-tag-degraded { background: var(--warning-fill); border-color: var(--warning); color: var(--on-severity); }
+/* Solid card fill (reversed by direct request, same reasoning as the
+   health banner above): .alert-title/.signal-detail and the nested
+   .status-pill/.alert-tag chips (set by their own rules elsewhere) all
+   need to flip to an on-severity-safe treatment once the card itself
+   carries the severity color, instead of a neutral --bg-1 card with
+   only the border and small chips colored. */
+.alert-item.alert-degraded { border-color: var(--warning); background: var(--warning-fill); }
+.alert-item.alert-critical { border-color: var(--danger); background: var(--danger-fill); }
+.alert-item.alert-degraded .alert-title,
+.alert-item.alert-degraded .signal-detail,
+.alert-item.alert-critical .alert-title,
+.alert-item.alert-critical .signal-detail { color: var(--on-severity); }
+.alert-item.alert-degraded .status-pill,
+.alert-item.alert-degraded .alert-tag,
+.alert-item.alert-critical .status-pill,
+.alert-item.alert-critical .alert-tag { background: var(--severity-chip-overlay); border-color: transparent; color: var(--on-severity); }
 /* "Where do I go next?" when the honest answer is "nowhere urgent" --
    same card shape as a real alert so it reads as part of the same
-   family, tinted healthy instead of a warning color. */
+   family, tinted healthy instead of a warning color. Deliberately still
+   neutral/bordered, not solid green, even though critical/degraded went
+   solid above: there's nothing urgent to announce at this volume. */
 .alert-item-clear { border-color: var(--success); }
 
 /* Severity breakdown row under Active Alerts (Sequence 6) -- three real
@@ -936,8 +1002,8 @@ header {
   background: var(--bg-1);
   color: var(--text-tertiary);
 }
-.timeline-event-correction { background: var(--danger-soft); border-color: var(--danger-border-soft); color: var(--danger); }
-.timeline-event-irreversible_action { background: var(--warning-soft); border-color: var(--warning-border-soft); color: var(--warning); }
+.timeline-event-correction { background: var(--danger-fill); border-color: var(--danger); color: var(--on-severity); }
+.timeline-event-irreversible_action { background: var(--warning-fill); border-color: var(--warning); color: var(--on-severity); }
 .timeline-event-axiom { background: var(--accent-soft); border-color: var(--accent-border-soft); color: var(--accent); }
 
 /* Machine-shaped content inline within a human-written sentence
@@ -955,19 +1021,30 @@ header {
   padding: 8px 10px; font-size: 14px; background: var(--bg-well);
   box-shadow: var(--glow-box);
 }
+/* Solid, not tonal (reversed by direct request, same reasoning as the
+   health banner/alert cards above). .mono-inline inherits color: var(
+   --on-severity) is set here, not per-span, so the target-id substring
+   stays readable without its own override. */
 .frontier-conflicts .conflict-item {
   border: 1px solid var(--danger); border-radius: var(--radius-sm);
-  padding: 8px 10px; font-size: 14px; background: var(--danger-soft);
+  padding: 8px 10px; font-size: 14px; background: var(--danger-fill);
+  color: var(--on-severity);
   margin-bottom: 6px;
   box-shadow: var(--glow-box);
 }
 
+/* Solid, not tonal -- same reasoning. The nested .status-pill (the
+   "Pending compensation" pill app.js always renders inside this card)
+   needs the overlay treatment, same as .alert-item's nested chips
+   above, so it doesn't vanish into an identically-colored parent. */
 .obligation-item {
   border: 1px solid var(--warn); border-radius: var(--radius-sm);
-  padding: 10px 12px; font-size: 14px; background: var(--warning-soft);
+  padding: 10px 12px; font-size: 14px; background: var(--warning-fill);
+  color: var(--on-severity);
   margin-bottom: 8px;
   box-shadow: var(--glow-box);
 }
+.obligation-item .status-pill { background: var(--severity-chip-overlay); border-color: transparent; color: var(--on-severity); }
 
 /* Decision Browser as an investigation workspace, not a filter list
    (Phase 2, Commit 3): "All" stands alone above the two workflow groups
@@ -1035,8 +1112,21 @@ header {
    here lifts the background instead (same var(--bg-3) row-hover already
    used by .timeline-item/.browser-row), so a degraded card never shows a
    blue border next to its own amber "DEGRADED" tag just because the
-   cursor is sitting on it. */
+   cursor is sitting on it. Only .alert-item-clear is still neutral by
+   the time this runs (critical/degraded went solid above), so this stays
+   its hover. */
 .alert-clickable:hover { background: var(--bg-3); }
+/* Critical/degraded now carry a solid severity background (above) --
+   dropping to var(--bg-3) on hover would flash it back to a neutral
+   gray card for as long as the cursor sits there, the same "goes flat
+   mid-interaction" bug a plain var(--bg-3) hover would be guarding
+   against in the first place. Re-declaring each variant's own solid
+   color plus brightness() (same technique .context-clickable.health-*
+   :hover already uses above) keeps the card's own color while hovered
+   instead of falling back to gray; higher specificity than
+   .alert-clickable:hover above wins regardless of source order. */
+.alert-item.alert-critical.alert-clickable:hover { background: var(--danger-fill); filter: brightness(1.08); }
+.alert-item.alert-degraded.alert-clickable:hover { background: var(--warning-fill); filter: brightness(1.08); }
 
 .empty-note { color: var(--text-dim); font-size: 14px; font-style: italic; }
 
@@ -1106,23 +1196,25 @@ header {
    row, the same way Stripe/GitHub's object pages give status its own
    prominence separate from an object's type tags. */
 .inspector-status { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-/* Tonal (Sequence 6): border dropped from the status's full-value color
-   to its ~24%-opacity soft-border token, matching every other badge/pill
-   in the app now (.kind-badge, .timeline-event-kind) -- the fill+text
-   already carried the color; a full-opacity border on top of that read
-   as one part of the badge louder than the rest. */
+/* Solid (reversed from Sequence 6's tonal call, by direct request): a
+   full-value fill with --on-severity text, not a soft-opacity fill with
+   colored text. .status-pill-superseded is untouched -- it was never a
+   severity color, just the neutral "nothing to show" variant. Where a
+   status-pill ends up nested inside an already-solid severity card of
+   the same color (.alert-item.alert-critical/-degraded, .obligation-item),
+   a more specific override elsewhere swaps it to the chip-overlay
+   treatment instead, so it doesn't vanish into its own background --
+   see those rules. */
 .status-pill {
   display: inline-block; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full);
   font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.02em;
   font-size: var(--text-xs); font-weight: var(--weight-semibold); border: 1px solid;
 }
-.status-pill-live { background: var(--success-soft); border-color: var(--success-border-soft); color: var(--success); }
+.status-pill-live { background: var(--success-fill); border-color: var(--success); color: var(--on-severity); }
 .status-pill-superseded { background: var(--bg-1); border-color: var(--border-strong); color: var(--text-tertiary); }
-.status-pill-pending { background: var(--warning-soft); border-color: var(--warning-border-soft); color: var(--warning); }
-/* Severity variants (Sequence 6) -- the Operations Overview banner's
-   active-alerts chip and each alert card's own badge, same tonal family. */
-.status-pill-critical { background: var(--danger-soft); border-color: var(--danger-border-soft); color: var(--danger); }
-.status-pill-degraded { background: var(--warning-soft); border-color: var(--warning-border-soft); color: var(--warning); }
+.status-pill-pending { background: var(--warning-fill); border-color: var(--warning); color: var(--on-severity); }
+.status-pill-critical { background: var(--danger-fill); border-color: var(--danger); color: var(--on-severity); }
+.status-pill-degraded { background: var(--warning-fill); border-color: var(--warning); color: var(--on-severity); }
 /* Same pill, recalibrated for Timeline's dense single-line rows (11px to
    sit next to the row's existing 10px badges, pushed to the row's own
    trailing edge -- the same right-aligned-flag convention Decision
@@ -1160,7 +1252,19 @@ header {
    stays fully visible even while the cursor is still over it right
    after a click -- the same class of bug already found and fixed for
    .browser-filter-active. */
-.node-circle.node-highlight { stroke: var(--accent); stroke-width: 4; }
+/* A same-hue thicker ring alone was barely visible on a "tool" node --
+   --kind-tool's own stroke color already sits close to --accent, so the
+   only cue left was stroke-width, easy to miss in a quick glance or a
+   screenshot (confirmed: a real operator didn't notice it on a tool
+   node). The radius bump in app.js's drawGraphSvg (hue-independent: a
+   bigger circle reads as selected regardless of color) is the primary
+   fix; the glow here is a second, also hue-independent cue on top of
+   the existing color/width change, not a replacement for either. */
+.node-circle.node-highlight {
+  stroke: var(--accent);
+  stroke-width: 4;
+  filter: drop-shadow(0 0 6px var(--accent));
+}
 
 footer { padding: 18px 28px 40px; color: var(--text-dim); font-size: 13px; }
 footer code { background: var(--panel); padding: 1px 6px; border-radius: var(--radius-sm); }
