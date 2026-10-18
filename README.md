@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/banner.png" alt="Sevenbox" width="600">
+</p>
+
 # Sevenbox
 
 Sevenbox is causal audit infrastructure for AI agent decisions. A Warrant
