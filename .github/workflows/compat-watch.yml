@@ -1,0 +1,131 @@
+name: Framework compatibility watch
+
+# Weekly, informational only -- never blocks anything. Installs the compiled
+# core from the latest GitHub Release (never rebuilds it) plus each adapter's
+# framework at whatever the *latest* version on PyPI is today (deliberately
+# unpinned, the opposite of what the package's own pyproject.toml extras do),
+# and runs that one adapter's own test file against it. A failure here means
+# "the next person to do a clean install might hit this," not "something in
+# this repo broke" -- nothing was changed, only time passed and an upstream
+# framework released a new version.
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Monday 9am UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: ${{ matrix.extra }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - extra: langgraph
+            package: langgraph
+            tests: tests/test_langgraph_adapter.py tests/test_langgraph_adapter_branching_compose.py tests/test_langgraph_adapter_frontier.py tests/test_langgraph_adapter_redaction.py
+          - extra: openai-agents
+            package: openai-agents
+            tests: tests/test_openai_agents_adapter.py
+          - extra: pydantic-ai
+            package: pydantic-ai
+            tests: tests/test_pydantic_ai_adapter.py
+          - extra: crewai
+            package: crewai
+            tests: tests/test_crewai_adapter.py
+          - extra: deep-agents
+            package: deepagents
+            tests: tests/test_deep_agents_adapter.py
+          - extra: agent-framework
+            package: agent-framework
+            tests: tests/test_agent_framework_adapter.py
+          - extra: openhands
+            package: openhands-sdk
+            tests: tests/test_openhands_adapter.py
+          - extra: llamaindex
+            package: llama-index-core
+            tests: tests/test_llamaindex_adapter.py
+          - extra: smolagents
+            package: smolagents
+            tests: tests/test_smolagents_adapter.py
+          - extra: letta
+            package: letta-client
+            tests: tests/test_letta_adapter.py
+          - extra: google-adk
+            package: google-adk
+            tests: tests/test_google_adk_adapter.py
+          - extra: strands
+            package: strands-agents
+            tests: tests/test_strands_adapter.py
+          - extra: haystack
+            package: haystack-ai
+            tests: tests/test_haystack_adapter.py
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the compiled core from the latest release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          gh release download --repo sevenboxlabs/sevenbox --pattern "*cp312*manylinux*x86_64*.whl" --dir .
+          pip install ./*.whl
+
+      - name: Install sevenbox with ${{ matrix.extra }}
+        run: pip install -e ".[${{ matrix.extra }}]" pytest
+
+      - name: Force the absolute latest ${{ matrix.package }}, ignoring any ceiling this repo pins
+        # Without this, an extra that already has a ceiling (like google-adk,
+        # see issue #1) would only ever test the version it's pinned to --
+        # defeating the point of a *compatibility watch*, which exists
+        # specifically to notice when a newer release starts working again so
+        # the ceiling can be lifted.
+        run: pip install --upgrade --no-deps "${{ matrix.package }}"
+
+      - name: Record installed version
+        id: version
+        run: echo "version=$(pip show ${{ matrix.package }} | grep -i '^Version' | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
+
+      - name: Run ${{ matrix.extra }} adapter tests
+        id: test
+        continue-on-error: true
+        env:
+          SEVENBOX_ACCEPT_TERMS: "1"
+        run: pytest ${{ matrix.tests }} -q
+
+      - name: Open an issue if the adapter broke
+        if: steps.test.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXTRA: ${{ matrix.extra }}
+          PACKAGE: ${{ matrix.package }}
+          VERSION: ${{ steps.version.outputs.version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -eu
+          title="Compat watch: $EXTRA $VERSION breaks adapter tests"
+          existing=$(gh issue list --repo sevenboxlabs/sevenbox --state open \
+            --search "in:title \"Compat watch: $EXTRA\"" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo sevenboxlabs/sevenbox \
+              --body "Still failing as of $(date -u +%Y-%m-%d) against $PACKAGE $VERSION. See run: $RUN_URL"
+          else
+            {
+              printf 'Weekly compatibility check found that `%s %s` breaks `%s` against the current pinned behavior. This is informational, not a release gate -- the published package is unaffected unless its own pyproject.toml extra gets a ceiling added deliberately.\n' "$PACKAGE" "$VERSION" "${{ matrix.tests }}"
+              printf '\n'
+              printf 'Run: %s\n' "$RUN_URL"
+              printf '\n'
+              printf 'Next step: confirm this is not a flake (re-run), diagnose the root cause the same way #1 (google-adk 2.7+) was diagnosed, and decide whether to pin a ceiling on this extra.\n'
+            } > /tmp/issue-body.md
+            gh issue create --repo sevenboxlabs/sevenbox --title "$title" \
+              --label "compat-watch" --body-file /tmp/issue-body.md
+          fi
