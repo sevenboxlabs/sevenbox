@@ -102,8 +102,22 @@ jobs:
           SEVENBOX_ACCEPT_TERMS: "1"
         run: pytest ${{ matrix.tests }} -q
 
-      - name: Open an issue if the adapter broke
+      - name: Retry once before concluding anything actually broke
+        # Some adapter tests are deliberately probabilistic (e.g. a
+        # race-detection test that tries many trials and isn't guaranteed to
+        # hit the race every single run) -- a single failure here is not
+        # enough to conclude a framework version broke something. Re-running
+        # only happens if the first attempt failed, and only this one extra
+        # time; two failures in a row is what actually opens an issue.
+        id: retry
         if: steps.test.outcome == 'failure'
+        continue-on-error: true
+        env:
+          SEVENBOX_ACCEPT_TERMS: "1"
+        run: pytest ${{ matrix.tests }} -q
+
+      - name: Open an issue if the adapter broke twice in a row
+        if: steps.test.outcome == 'failure' && steps.retry.outcome == 'failure'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EXTRA: ${{ matrix.extra }}
@@ -113,8 +127,13 @@ jobs:
         run: |
           set -eu
           title="Compat watch: $EXTRA $VERSION breaks adapter tests"
+          # Broader than an exact title match on purpose: a hand-written
+          # issue about this same extra (like #1, titled "Support google-adk
+          # 2.7+", not "Compat watch: google-adk ...") should still be found
+          # and commented on instead of duplicated. Anything open, labeled
+          # compat-watch, mentioning the extra name in its title qualifies.
           existing=$(gh issue list --repo sevenboxlabs/sevenbox --state open \
-            --search "in:title \"Compat watch: $EXTRA\"" --json number --jq '.[0].number // empty')
+            --label "compat-watch" --search "in:title \"$EXTRA\"" --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
             gh issue comment "$existing" --repo sevenboxlabs/sevenbox \
               --body "Still failing as of $(date -u +%Y-%m-%d) against $PACKAGE $VERSION. See run: $RUN_URL"
