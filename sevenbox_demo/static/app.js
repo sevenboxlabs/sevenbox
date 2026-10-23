@@ -52,14 +52,13 @@ const EXECUTION_MODE_LABELS = { live: "Live run", replay: "Replay", loaded: "Loa
 // already known to the graph, never a parallel model describing it again.
 let lastData = null;
 
-// The one shared Selection Context (docs/operations_center.md section 13):
-// which decision every detail panel currently shows. Set only by
-// selectWarrant() -- never read or written directly by a panel's own
-// render function.
+// The one shared Selection Context: which decision every detail panel
+// currently shows. Set only by selectWarrant() -- never read or written
+// directly by a panel's own render function.
 let selectedWarrantId = null;
 
-// The Decision Browser's one active filter (docs/operations_center.md
-// section 14). Every predicate here reads a field render_node_details()
+// The Decision Browser's one active filter. Every predicate here reads
+// a field render_node_details()
 // already sends on every warrant -- no new backend query, no search, no
 // combining filters. "All" is the only default that makes sense before an
 // operator has picked a question to ask.
@@ -119,15 +118,15 @@ const BROWSER_GROUP_LABELS = { attention: "Needs attention", explore: "Explore" 
 
 // The System currently being observed -- { kind: "example", name } or
 // { kind: "local", path }. This is today's DecisionGraphSource-backed
-// data, generalized to the vocabulary docs/operations_center.md section 2
-// uses (System/Execution), per Step B. Two things read this: which
+// data, generalized to the System/Execution vocabulary the rest of this
+// file uses. Two things read this: which
 // /api/explain route a node click should use (purely a routing fact, never
 // a domain judgment -- the server exposes two symmetric explain routes,
 // see sevenbox_demo/server.py), and the "currently open" label the System
 // Picker shows. Reset on every new example/local-system open.
 let currentSystem = { kind: "example", name: "refund" };
 
-// --- Panel registry (see docs/operations_center.md, sections 4-7) ---
+// --- Panel registry ---
 //
 // A panel is one independent view of the current Execution's data. Panels
 // don't know about each other, about Systems, or about how the current
@@ -371,7 +370,7 @@ function renderContextBar() {
   }
 }
 
-// --- System Picker (docs/operations_center.md, sections 2-3) ---
+// --- System Picker ---
 //
 // One origin-agnostic entry point for opening a System, whichever backend
 // produces it. "Examples" is populated from GET /api/scenarios --
@@ -544,8 +543,8 @@ function jsonBlock(label, value) {
 // inspect its full metadata (client-side, from the already-fetched
 // payload) and fetch its causal narrative (a server round-trip -- explain()
 // is a different warrant_core query, not a field on the node itself). Plus,
-// as of the Selection Context (docs/operations_center.md section 13),
-// updating the one shared selectedWarrantId and reflecting it on the
+// updating the one shared selectedWarrantId (the Selection Context) and
+// reflecting it on the
 // Execution Graph even when the click didn't originate there.
 function selectWarrant(warrantId) {
   selectedWarrantId = warrantId;
@@ -603,6 +602,18 @@ function renderNodeMetadata(w) {
         .join("<br>")
     : "—";
 
+  // Direct/Transitive above already correctly show "—" once an obligation is
+  // discharged (compensation_for()/find_transitive_obligations() stop
+  // reporting it) -- which looks identical to "never had one." This row is
+  // what makes that distinction visible: *that* and *why* it was resolved,
+  // not just silence where an alert used to be.
+  const discharges = w.compensation.discharges;
+  const dischargesText = discharges.length
+    ? discharges
+        .map((d) => `${d.outcome === "compensated" ? "compensated" : "not needed"} — ${escapeHtml(d.reason)}`)
+        .join("<br>")
+    : "—";
+
   const replay = w.replay_available;
   const replayText = `${replay.available ? (replay.degraded ? "available, degraded" : "available") : "unavailable"} — ${escapeHtml(replay.reason)}`;
 
@@ -643,6 +654,7 @@ function renderNodeMetadata(w) {
     <dl class="metadata-list">
       <dt>Direct</dt><dd>${directText}</dd>
       <dt>Transitive</dt><dd>${transitiveText}</dd>
+      <dt>Discharged</dt><dd>${dischargesText}</dd>
     </dl>
 
     <h3 class="subsection-heading">Effects</h3>
@@ -736,8 +748,7 @@ const CHEVRON_RIGHT_PATH = '<path d="M9 6l6 6-6 6"/>';
 
 // Alerts are not a second data source: they're DecisionHealth.signals
 // filtered to the non-healthy ones. No new backend concept, no alert
-// persistence/thresholds/history -- see docs/operations_center.md's panel
-// table and CLAUDE.md section 10.1's Epic 2 scope.
+// persistence/thresholds/history.
 function renderHealth(data) {
   const overallEl = document.getElementById("health-overall");
   const alertsHeadingEl = document.getElementById("alerts-heading");
@@ -985,8 +996,8 @@ function drawGraphSvg(svg, nodes, edges, { onNodeClick, highlightId } = {}) {
   });
 }
 
-// The Decision Browser (docs/operations_center.md section 14): the generic
-// way to discover decisions -- filter the current Execution's own
+// The Decision Browser: the generic way to discover decisions -- filter
+// the current Execution's own
 // data.warrants by a fact warrant_core already computed, click a row to
 // select it. No fetch, no search, no new backend query -- BROWSER_FILTERS'
 // predicates read exactly the fields render_node_details() already sends.

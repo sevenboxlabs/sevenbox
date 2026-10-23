@@ -49,6 +49,7 @@ from warrant_core import (
     Explanation,
     Origin,
     TransitiveCompensationObligation,
+    Warrant,
 )
 
 
@@ -72,6 +73,21 @@ def _render_transitive_compensation(obligation: TransitiveCompensationObligation
     return {
         "superseded_ancestor_id": obligation.superseded_ancestor_id,
         "corrector_id": obligation.corrector_id,
+    }
+
+
+def _render_discharge(discharge: Warrant) -> Dict[str, Any]:
+    # `.content["discharge"]` is exactly the payload discharge_obligation()
+    # (warrant_core/compensation.py) built -- outcome/reason/evidence_id --
+    # passed through field-for-field, same discipline as everything else in
+    # this module: no re-deriving, no re-labeling what warrant_core already
+    # computed.
+    payload = discharge.content.get("discharge", {})
+    return {
+        "discharge_id": discharge.id,
+        "outcome": payload.get("outcome"),
+        "reason": payload.get("reason"),
+        "evidence_id": payload.get("evidence_id"),
     }
 
 
@@ -151,6 +167,9 @@ def render_node_details(node: DecisionNode, *, order: int) -> Dict[str, Any]:
             "transitive": [
                 _render_transitive_compensation(o)
                 for o in n.compensation_relationships.transitive
+            ],
+            "discharges": [
+                _render_discharge(d) for d in n.compensation_relationships.discharges
             ],
         },
     }

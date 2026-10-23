@@ -18,16 +18,20 @@ limitation (matching by parent_ids only), as Phase 2.
 from __future__ import annotations
 
 from contextvars import ContextVar
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from warrant_core import (
+    CompensationObligation,
+    DischargeOutcome,
     EpistemicClass,
     Origin,
     ReversibilityClass,
     SourceKind,
+    TransitiveCompensationObligation,
     WarrantStore,
     compute_frontier,
     create_warrant,
+    discharge_obligation,
     find_transitive_obligations,
 )
 from warrant_runtime import ReplayEffectExecutor
@@ -93,6 +97,29 @@ class SevenboxSession:
 
     def obligations(self):
         return find_transitive_obligations(self.store)
+
+    def discharge(
+        self,
+        obligation: Union[CompensationObligation, TransitiveCompensationObligation],
+        outcome: DischargeOutcome,
+        reason: str,
+        evidence: Optional[Traced] = None,
+        source_kind: SourceKind = SourceKind.HUMAN,
+        epistemic: Optional[EpistemicClass] = None,
+    ) -> Traced:
+        """Thin wrapper over warrant_core.discharge_obligation() -- unwraps `evidence`
+        (a Traced, the SDK's vocabulary for "a value with a Warrant id attached")
+        down to the plain id the core function works with, and wraps the result
+        back into a Traced the same way every other session/decorator call does.
+        All the actual discharge rules (conflict checks, idempotency, what counts
+        as valid evidence) live in warrant_core -- see discharge_obligation()'s own
+        docstring, not duplicated here."""
+        warrant = discharge_obligation(
+            self.store, obligation, outcome, reason,
+            evidence_id=evidence.warrant_id if evidence is not None else None,
+            source_kind=source_kind, epistemic=epistemic,
+        )
+        return Traced(warrant.content, warrant.id)
 
     def __enter__(self) -> "SevenboxSession":
         self._token = _current_session.set(self)

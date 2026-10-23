@@ -48,16 +48,19 @@ import pytest
 from sevenbox_demo.server import DemoHandler
 from sevenbox_demo.visualize import render_decision_graph, render_health_summary, render_timeline
 from warrant_core import (
+    DischargeOutcome,
     EffectRecord,
     EpistemicClass,
     ReversibilityClass,
     SourceKind,
     SqliteWarrantStore,
     WarrantStore,
+    compensation_for,
     compute_health,
     compute_metrics,
     compute_timeline,
     create_warrant,
+    discharge_obligation,
     inspect,
     supersede,
 )
@@ -71,9 +74,10 @@ WARRANT_KEYS = {
 EFFECT_METADATA_KEYS = {"present", "request", "response", "source_name"}
 REDACTION_METADATA_KEYS = {"applied"}
 REPLAY_AVAILABLE_KEYS = {"available", "degraded", "reason"}
-COMPENSATION_KEYS = {"direct", "transitive"}
+COMPENSATION_KEYS = {"direct", "transitive", "discharges"}
 DIRECT_COMPENSATION_KEYS = {"action_required", "ambiguous", "reason", "competing_superseder_ids"}
 TRANSITIVE_COMPENSATION_KEYS = {"superseded_ancestor_id", "corrector_id"}
+DISCHARGE_KEYS = {"discharge_id", "outcome", "reason", "evidence_id"}
 FRONTIER_KEYS = {"live_ids", "conflicts"}
 CONFLICT_KEYS = {"target_id", "competing_superseder_ids"}
 GRAPH_LEVEL_OBLIGATION_KEYS = {
@@ -148,6 +152,10 @@ def _assert_warrant_shape(w, label):
         _assert_exact_keys(direct, DIRECT_COMPENSATION_KEYS, f"{label}.compensation.direct")
     for t in w["compensation"]["transitive"]:
         _assert_exact_keys(t, TRANSITIVE_COMPENSATION_KEYS, f"{label}.compensation.transitive[]")
+    for d in w["compensation"]["discharges"]:
+        _assert_exact_keys(d, DISCHARGE_KEYS, f"{label}.compensation.discharges[]")
+        assert d["outcome"] in {"compensated", "not_needed"}
+        assert isinstance(d["reason"], str) and d["reason"]
 
 
 def _assert_graph_payload_shape(payload):
@@ -292,3 +300,43 @@ def test_conflict_and_ambiguous_direct_compensation_shapes():
     root_json = next(w for w in payload["warrants"] if w["id"] == root.id)
     assert root_json["compensation"]["direct"] is not None
     assert root_json["compensation"]["direct"]["ambiguous"] is True
+
+
+def test_discharged_obligation_shape():
+    store = WarrantStore()
+    root = store.add(create_warrant(
+        content={"v": "root"}, source_kind=SourceKind.AXIOM,
+        epistemic=EpistemicClass.VERIFIED, reversibility=ReversibilityClass.PURE,
+    ))
+    action = store.add(create_warrant(
+        content={"claim": "refund_action(4471)"}, source_kind=SourceKind.DERIVED,
+        epistemic=EpistemicClass.VERIFIED, reversibility=ReversibilityClass.IRREVERSIBLE,
+        parent_ids=(root.id,),
+    ))
+    supersede(
+        store, target_id=action.id, content={"claim": "action was erroneous"},
+        source_kind=SourceKind.TOOL, epistemic=EpistemicClass.VERIFIED,
+        reversibility=ReversibilityClass.PURE,
+        effect_record=EffectRecord(request="q", response="a"),
+    )
+    obligation = compensation_for(store, action.id)
+    discharge_obligation(
+        store, obligation, DischargeOutcome.NOT_NEEDED,
+        reason="target was already gone",
+    )
+
+    graph = inspect(store)
+    metrics = compute_metrics(graph)
+    health = compute_health(metrics)
+    payload = render_decision_graph(graph, mode="live", call_counts={})
+    payload.update(render_health_summary(metrics, health))
+    payload["timeline"] = render_timeline(compute_timeline(graph))
+
+    _assert_graph_payload_shape(payload)
+    action_json = next(w for w in payload["warrants"] if w["id"] == action.id)
+    assert action_json["compensation"]["direct"] is None  # resolved, nothing pending
+    discharges = action_json["compensation"]["discharges"]
+    assert len(discharges) == 1
+    assert discharges[0]["outcome"] == "not_needed"
+    assert discharges[0]["reason"] == "target was already gone"
+    assert discharges[0]["evidence_id"] is None

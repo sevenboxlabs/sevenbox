@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sevenbox"
-version = "0.1.0"
+version = "0.1.1"
 description = "Causal audit infrastructure for AI agent decisions -- SDK and 14 framework adapters, built on the warrant-core engine."
 readme = "README.md"
 authors = [
@@ -15,7 +15,7 @@ license = "Apache-2.0"
 # (crewAIInc/crewAI#5109, closed "not planned" -- not a temporary gap).
 requires-python = ">=3.10,<3.14"
 dependencies = [
-    "warrant-core>=0.1.0",
+    "warrant-core>=0.1.1",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",

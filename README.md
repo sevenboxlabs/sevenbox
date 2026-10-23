@@ -27,16 +27,16 @@ every run your agent makes, with the causal graph above.
 Neither package is on PyPI yet. Both come from this repo.
 
 **1. Install the compiled `warrant-core` engine.** Go to this repo's
-[Releases page](https://github.com/sevenboxlabs/sevenbox/releases/tag/v0.1.0)
+[Releases page](https://github.com/sevenboxlabs/sevenbox/releases/tag/v0.1.1)
 and download the wheel matching your OS and Python version (3.10-3.13),
 then:
 
 ```bash
-pip install warrant_core-0.1.0-<your-platform-and-python-tag>.whl
+pip install warrant_core-0.1.1-<your-platform-and-python-tag>.whl
 ```
 
 Wheels are built for macOS (arm64), Linux (manylinux x86_64), and Windows
-(AMD64) — e.g. `warrant_core-0.1.0-cp312-cp312-macosx_11_0_arm64.whl` for
+(AMD64) — e.g. `warrant_core-0.1.1-cp312-cp312-macosx_11_0_arm64.whl` for
 macOS on Python 3.12, or `...-manylinux_2_17_x86_64.manylinux2014_x86_64.whl`
 for Linux, or `...-win_amd64.whl` for Windows.
 
@@ -52,7 +52,7 @@ Or, if you've already cloned it:
 pip install .
 ```
 
-pip resolves `sevenbox`'s `warrant-core>=0.1.0` requirement against the
+pip resolves `sevenbox`'s `warrant-core>=0.1.1` requirement against the
 wheel you installed in step 1 and won't try to reach PyPI for it.
 
 The first time you `import warrant_core`, you'll be shown its evaluation
@@ -100,12 +100,22 @@ Microsoft Agent Framework, Mastra, OpenHands, LlamaIndex Agents,
 Smolagents, Letta, Google ADK, AWS Strands Agents, Haystack Agents. A
 10-15 line usage page for each lives in [`docs/adapters/`](docs/adapters/).
 
+## Resolving obligations
+
+Finding a pending compensation obligation is half the story;
+`session.discharge()` resolves one, either because a compensating
+action was actually taken or because it turned out not to need one.
+Once discharged, it stops showing up as pending. See
+[`examples/discharge_obligation.py`](examples/discharge_obligation.py)
+and [`docs/api-reference.md`](docs/api-reference.md) for both cases
+end to end.
+
 ## Validation
 
-**206** tests in this repo, covering the SDK and all 14 adapters, pass
+**222** tests in this repo, covering the SDK and all 14 adapters, pass
 against the real installed framework packages — no network, no API keys.
 The full suite, including `warrant_core`/`warrant_runtime` themselves
-(private, not in this repo), is **394** tests.
+(private, not in this repo), is **409** tests.
 
 ## See it running
 

@@ -124,6 +124,42 @@ obligations = find_transitive_obligations(store)   # -> list[TransitiveCompensat
 irreversible action already happened, that's a transitive obligation —
 found by walking the full ancestor set, not just direct parents.
 
+### Discharging an obligation
+
+```python
+from warrant_core import DischargeOutcome, discharge_obligation
+
+discharge_obligation(
+    store, obligation, DischargeOutcome.COMPENSATED,
+    reason="reversed the duplicate refund", evidence_id=reversal_warrant.id,
+)
+```
+
+Marks a compensation obligation as resolved, either because a
+compensating action was actually taken (`outcome=COMPENSATED`, which
+requires `evidence_id`: the id of the Warrant that recorded that
+action) or because it turned out not to need one (`outcome=NOT_NEEDED`
+— the action's effect was already moot by the time anyone got to it,
+for example a write whose target had already been deleted). `reason`
+is always required.
+
+Once discharged, `compensation_for()` and `find_transitive_obligations()`
+stop reporting that obligation. Discharging the same obligation again
+with the same outcome is a no-op that returns the existing record;
+discharging it again with a *different* outcome is refused, since that
+would silently overwrite how it was actually resolved. Discharging is
+also refused if there's more than one live, competing correction and
+nothing has said which one is authoritative yet — resolve that first.
+
+By default the discharge is recorded as coming from a person or a
+policy, not a computation; pass `source_kind=` to attribute it to
+something else (an automated service, for instance) instead.
+
+The SDK wraps this as `session.discharge(obligation, outcome, reason,
+evidence=None)`, where `evidence` is a `Traced` instead of a raw id.
+See `examples/discharge_obligation.py` for a complete walkthrough of
+both outcomes.
+
 ## Replay and reconstruction
 
 ```python
