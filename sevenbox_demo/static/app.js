@@ -871,7 +871,7 @@ function renderMetrics(data) {
     [formatRatio(m.replayable_ratio), "Replay Coverage"],
     [m.degraded_replay_count, "Degraded Replay Keys"],
     [m.redacted_count, "Redactions"],
-    [formatDepth(m.average_causal_depth), "Avg. Decision Depth"],
+    [formatDepth(m.average_causal_depth), "Avg. Causal Depth"],
     [m.superseded_count, "Superseded (all-time)"],
   ];
 
@@ -1158,7 +1158,7 @@ function renderLegend() {
     .join("");
   const structuralItems = `
     <span><span class="legend-swatch legend-swatch-dim" style="background:${KIND_COLORS.axiom}"></span>superseded (dimmed)</span>
-    <span><span class="legend-line"></span>depends on</span>
+    <span><span class="legend-line"></span>causal parent</span>
     <span><span class="legend-line legend-line-supersede"></span>supersede</span>
   `;
   legend.innerHTML = kindItems + structuralItems;

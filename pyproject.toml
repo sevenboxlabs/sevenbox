@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sevenbox"
-version = "0.1.2"
+version = "0.1.1"
 description = "Causal audit infrastructure for AI agent decisions -- SDK and 14 framework adapters, built on the warrant-core engine."
 readme = "README.md"
 authors = [
